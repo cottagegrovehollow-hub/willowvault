@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Willow's Image Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --pink:#FF3E7F;
+    --yellow:#FFC93C;
+    --teal:#2EC4B6;
+    --purple:#6C4AB6;
+    --red:#E03A3A;
+    --cream:#FFF9F0;
+    --ink:#1A1A2E;
+    --paper:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    background-image:radial-gradient(circle at 10px 10px, rgba(26,26,46,0.05) 2px, transparent 2px);
+    background-size:26px 26px;
+    font-family:'Nunito', system-ui, sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2', system-ui, sans-serif;}
+
+  /* ---------- Header ---------- */
+  header{
+    padding:22px 24px 16px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    border-bottom:4px solid var(--ink);
+    background:var(--paper);
+  }
+  header .title-wrap{display:flex; align-items:center; gap:12px;}
+  .blob{
+    width:46px;height:46px;flex:0 0 auto;
+    background:var(--yellow);
+    border:3px solid var(--ink);
+    border-radius:42% 58% 63% 37% / 41% 44% 56% 59%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+  }
+  h1{margin:0; font-size:1.6rem; font-weight:800; letter-spacing:0.3px;}
+  header p.sub{margin:2px 0 0; font-size:0.85rem; color:#55536b; font-weight:600;}
+
+  .search-wrap{flex:1 1 320px; min-width:220px; position:relative;}
+  #searchInput{
+    width:100%; padding:12px 44px 12px 16px; font-size:0.95rem;
+    border:3px solid var(--ink); border-radius:14px; font-family:'Nunito',sans-serif;
+    font-weight:700; background:var(--cream); outline:none;
+  }
+  #searchInput:focus{box-shadow:4px 4px 0 var(--purple);}
+  .search-scope{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    font-size:0.7rem; font-weight:800; color:var(--yellow); background:#fff;
+    padding:3px 8px; border-radius:8px; border:2px solid var(--yellow);
+    pointer-events:none; white-space:nowrap;
+  }
+
+  .upload-btn{
+    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem;
+    padding:12px 20px; border-radius:14px; cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink); transition:transform .08s ease; white-space:nowrap;
+  }
+  .upload-btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink);}
+  #fileInput{display:none;}
+
+  /* ---------- App shell ---------- */
+  .app-shell{max-width:1400px; margin:0 auto;}
+
+  /* ---------- Home dashboard ---------- */
+  .home-view{padding:30px 24px 60px;}
+  .home-title{margin:0 0 20px; font-size:1.5rem;}
+  .tile-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:18px;
+  }
+  .tile{
+    border:3px solid var(--ink); border-radius:16px; padding:20px 16px;
+    cursor:pointer; text-align:left; font-family:'Baloo 2',sans-serif; font-weight:700;
+    box-shadow:5px 5px 0 var(--ink); transition:transform .08s ease; position:relative;
+    min-height:110px; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .tile:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink);}
+  .tile .tile-icon{font-size:1.6rem;}
+  .tile .tile-name{font-size:1.05rem; margin-top:8px;}
+  .tile .tile-count{
+    align-self:flex-start; margin-top:10px; background:var(--ink); color:#fff;
+    font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px;
+    font-family:'Nunito',sans-serif;
+  }
+  .tile.all-tile{background:var(--yellow);}
+  .tile{position:relative;}
+  .folder-tools{
+    display:flex; gap:6px; align-items:center; overflow:hidden;
+    width:0; opacity:0;
+    transition:width .18s ease, opacity .18s ease;
+  }
+  .folder-tools.corner{position:absolute; top:8px; right:8px;}
+  .folder-gear, .folder-del-x{
+    border:2px solid var(--ink); border-radius:50%; width:26px; height:26px; flex:0 0 auto;
+    font-weight:800; cursor:pointer; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center; font-size:0.8rem;
+    font-family:'Nunito',sans-serif;
+  }
+  .folder-gear{background:#fff; color:var(--ink);}
+  .folder-del-x{background:var(--pink); color:#fff;}
+  .tile:hover .folder-tools, .tile:focus-within .folder-tools,
+  .folder-btn:hover .folder-tools, .folder-btn:focus-within .folder-tools{
+    width:64px; opacity:1;
+  }
+  .color-popover{
+    position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); z-index:40;
+    background:#fff; border:3px solid var(--ink); border-radius:12px; padding:8px;
+    box-shadow:4px 4px 0 var(--ink); display:flex; flex-direction:column; gap:8px;
+    width:150px;
+  }
+  .color-popover .rename-opt{
+    width:100%; padding:6px 8px; border:2px solid var(--ink); border-radius:8px; background:#fff;
+    font-weight:800; font-size:0.72rem; cursor:pointer; font-family:'Nunito',sans-serif;
+  }
+  .swatch-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px;}
+  .color-popover .swatch{
+    width:24px; height:24px; border-radius:50%; border:2px solid var(--ink); cursor:pointer; padding:0;
+  }
+  .tile.add-tile{
+    background:var(--paper); border-style:dashed; display:flex; align-items:center;
+    justify-content:center; text-align:center; font-size:1.05rem; color:#6b6884;
+  }
+
+  .home-add-folder{
+    display:flex; gap:10px; margin-top:22px; width:100%;
+  }
+  .home-add-folder input{
+    flex:1; padding:12px 14px; border:3px solid var(--ink); border-radius:12px;
+    font-family:'Nunito',sans-serif; font-weight:700; font-size:0.9rem; background:var(--cream);
+  }
+  .home-add-folder button{
+    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem;
+    padding:0 18px; border-radius:12px; cursor:pointer; box-shadow:3px 3px 0 var(--ink); white-space:nowrap;
+  }
+  .home-add-folder button:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
+  .folder-view{display:flex; align-items:flex-start;}
+  aside{width:250px; flex:0 0 auto; padding:20px 14px; position:sticky; top:0;}
+  main{flex:1; padding:22px 24px 60px; min-width:0;}
+
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; margin-bottom:16px;
+    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem;
+    padding:9px 16px; border-radius:12px; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+  }
+  .back-btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
+
+  .folder-btn{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    width:100%; text-align:left; padding:12px 14px; margin-bottom:10px;
+    border:3px solid var(--ink); border-radius:10px 10px 4px 4px;
+    background:var(--paper); cursor:pointer; font-family:'Baloo 2',sans-serif;
+    font-weight:700; font-size:0.95rem; color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink); position:relative;
+  }
+  .folder-btn::before{
+    content:""; position:absolute; top:-9px; left:14px; width:34px; height:10px;
+    background:inherit; border:3px solid var(--ink); border-bottom:none; border-radius:6px 6px 0 0;
+  }
+  .folder-btn.active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
+  .folder-btn .count{
+    background:var(--ink); color:#fff; font-size:0.72rem; font-weight:800;
+    padding:2px 8px; border-radius:20px; font-family:'Nunito',sans-serif;
+  }
+
+  .add-cat{display:flex; gap:6px; margin-top:16px;}
+  .add-cat input{
+    flex:1; padding:9px 10px; border:2.5px solid var(--ink); border-radius:8px;
+    font-family:'Nunito',sans-serif; font-weight:600; font-size:0.85rem; min-width:0;
+  }
+  .add-cat button{
+    border:2.5px solid var(--ink); background:var(--yellow); color:var(--ink);
+    border-radius:8px; font-weight:800; cursor:pointer; padding:0 12px; font-size:1rem;
+  }
+
+  .storage-note{margin-top:18px; font-size:0.72rem; color:#6b6884; line-height:1.4; font-weight:600;}
+  .storage-note button{
+    display:block; margin-top:8px; width:100%; padding:8px; font-size:0.75rem;
+    border:2px solid var(--ink); border-radius:8px; background:#fff; cursor:pointer; font-weight:800;
+  }
+
+  .gallery-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .gallery-head h2{margin:0; font-size:1.4rem;}
+  .gallery-head .tag{
+    background:var(--yellow); color:var(--ink); padding:4px 12px; border-radius:20px;
+    font-size:0.75rem; font-weight:800; font-family:'Nunito',sans-serif; border:2px solid var(--ink);
+  }
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:16px;}
+  .card{
+    border:3px solid var(--ink); border-radius:12px; overflow:hidden; background:#fff;
+    box-shadow:4px 4px 0 var(--ink); position:relative; cursor:pointer; display:flex; flex-direction:column;
+  }
+  .card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#eee;}
+  .card .meta{padding:8px 10px 10px;}
+  .card .fname{font-size:0.75rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .card select.moveSel{
+    width:100%; margin-top:6px; font-size:0.72rem; font-weight:700; padding:4px;
+    border:2px solid var(--ink); border-radius:6px; font-family:'Nunito',sans-serif; background:var(--cream);
+  }
+  .card .del-btn{
+    position:absolute; top:6px; right:6px; background:var(--pink); color:#fff; border:2px solid var(--ink);
+    border-radius:50%; width:26px; height:26px; font-weight:800; cursor:pointer; line-height:1;
+  }
+
+  .empty-state{
+    border:3px dashed var(--ink); border-radius:16px; padding:50px 20px; text-align:center;
+    color:#6b6884; font-weight:700;
+  }
+
+  /* ---------- Image preview modal ---------- */
+  .modal-bg{
+    display:none; position:fixed; inset:0; background:rgba(26,26,46,0.75); z-index:50;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-bg.open{display:flex;}
+  .modal{
+    background:#fff; border:4px solid var(--ink); border-radius:16px; max-width:800px; width:100%;
+    max-height:88vh; overflow:auto; box-shadow:8px 8px 0 var(--purple);
+  }
+  .modal img{width:100%; display:block; max-height:60vh; object-fit:contain; background:#111;}
+  .modal-body{padding:18px 20px;}
+  .modal-body h3{margin:0 0 6px;}
+  .modal-body .row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;}
+  .modal-body select{
+    padding:8px 10px; border:2.5px solid var(--ink); border-radius:8px; font-weight:700; font-family:'Nunito',sans-serif;
+  }
+  .modal-body .close-x, .modal-body .del-x{
+    border:2.5px solid var(--ink); border-radius:8px; padding:8px 14px; font-weight:800; cursor:pointer; font-family:'Baloo 2',sans-serif;
+  }
+  .modal-body .close-x{background:var(--yellow);}
+  .modal-body .del-x{background:var(--pink); color:#fff;}
+
+  /* ---------- Confirm modal ---------- */
+  .confirm-bg{
+    display:none; position:fixed; inset:0; background:rgba(26,26,46,0.75); z-index:70;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .confirm-bg.open{display:flex;}
+  .confirm-box{
+    background:#fff; border:4px solid var(--ink); border-radius:16px; max-width:420px; width:100%;
+    padding:24px; box-shadow:8px 8px 0 var(--pink);
+  }
+  .confirm-box p{margin:0 0 20px; font-weight:700; line-height:1.5;}
+  .confirm-actions{display:flex; gap:10px; justify-content:flex-end;}
+  .confirm-actions button{
+    border:2.5px solid var(--ink); border-radius:10px; padding:10px 18px; font-weight:800;
+    cursor:pointer; font-family:'Baloo 2',sans-serif; font-size:0.9rem;
+  }
+  .confirm-cancel{background:var(--yellow); color:var(--ink);}
+  .confirm-ok{background:var(--red); color:#fff;}
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(120%);
+    background:var(--cream); color:var(--ink); padding:14px 22px; border-radius:12px; font-weight:800;
+    z-index:60; transition:transform .25s ease; box-shadow:3px 3px 0 var(--yellow);
+    border:3px solid var(--ink); max-width:90vw; text-align:center;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0);}
+
+  @media(max-width:820px){
+    .folder-view{flex-direction:column;}
+    aside{width:100%; position:static; padding:14px 16px 0;}
+    main{padding:18px 16px 60px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- SIGN-IN GATE -->
+<div id="signInGate" style="position:fixed;inset:0;z-index:100;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:24px;">
+  <div class="blob" style="width:64px;height:64px;font-size:30px;">🌿</div>
+  <h1 style="margin:0;">Willow's Image Vault</h1>
+  <p style="font-weight:600;color:#55536b;margin:0;max-width:320px;">Sign in with Google to open your library, saved permanently in your Drive.</p>
+  <button class="upload-btn" id="googleSignInBtn">Sign in with Google</button>
+  <p id="authStatus" style="font-size:0.8rem;color:#6b6884;font-weight:700;min-height:1.2em;"></p>
+</div>
+
+<div id="appRootWrap" style="display:none;">
+<header>
+  <div class="title-wrap">
+    <div class="blob">🌿</div>
+    <div>
+      <h1>Willow's Image Vault</h1>
+      <p class="sub">Sort once. Find forever.</p>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search filenames...">
+    <span class="search-scope" id="searchScope">in All</span>
+  </div>
+  <button class="upload-btn" id="uploadBtn">＋ Upload Images</button>
+  <input type="file" id="fileInput" accept="image/*" multiple>
+</header>
+
+<div class="app-shell" id="appShell">
+
+  <!-- HOME DASHBOARD -->
+  <div class="home-view" id="homeView">
+    <h2 class="home-title">Choose a folder</h2>
+    <div class="tile-grid" id="tileGrid"></div>
+    <div class="home-add-folder">
+      <input type="text" id="homeNewCatName" placeholder="New folder name">
+      <button id="homeAddCatBtn">＋ Add Folder</button>
+    </div>
+  </div>
+
+  <!-- FOLDER (DRILL-IN) VIEW -->
+  <div class="folder-view" id="folderView" style="display:none;">
+    <aside>
+      <div id="folderList"></div>
+      <div class="add-cat">
+        <input type="text" id="newCatName" placeholder="New folder name">
+        <button id="addCatBtn">＋</button>
+      </div>
+      <div class="storage-note" id="storageNote">
+        Synced to your Google Drive.
+        <button id="signOutBtn">⎋ Sign out</button>
+      </div>
+    </aside>
+
+    <main>
+      <button class="back-btn" id="backBtn">◀ Back to Folders</button>
+      <div class="gallery-head">
+        <h2 id="galleryTitle">All Images</h2>
+        <span class="tag" id="galleryCount">0 images</span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        Nothing here yet — upload some images or try a different search.
+      </div>
+    </main>
+  </div>
+</div>
+</div>
+
+<!-- IMAGE PREVIEW MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <img id="modalImg" src="">
+    <div class="modal-body">
+      <h3 id="modalName"></h3>
+      <div style="font-size:0.8rem;color:#6b6884;font-weight:700;" id="modalDate"></div>
+      <div class="row">
+        <label style="font-weight:800;font-size:0.85rem;">Move to:</label>
+        <select id="modalMoveSel"></select>
+      </div>
+      <div class="row">
+        <button class="close-x" id="modalClose">Close</button>
+        <button class="del-x" id="modalDelete">Delete image</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-bg" id="confirmBg">
+  <div class="confirm-box">
+    <p id="confirmMsg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="confirmCancel">Nevermind</button>
+      <button class="confirm-ok" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME CATEGORY MODAL -->
+<div class="confirm-bg" id="renameBg">
+  <div class="confirm-box">
+    <p style="margin-bottom:10px;">Rename this folder:</p>
+    <input type="text" id="renameInput" style="width:100%;padding:10px 12px;border:2.5px solid var(--ink);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:18px;box-sizing:border-box;">
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="renameCancel">Cancel</button>
+      <button class="confirm-ok" id="renameOk" style="background:var(--teal);">Rename</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- Google Drive config ----------------
+  const CLIENT_ID = "61220014333-mc5ifndc0je8f4bnefebncg9g5v5bug3.apps.googleusercontent.com";
+  const SCOPES = "https://www.googleapis.com/auth/drive.file";
+  const DRIVE_API = "https://www.googleapis.com/drive/v3";
+  const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
+  const ROOT_FOLDER_NAME = "Willow Image Vault";
+  const ARCHIVE_FOLDER_NAME = "_Archived";
+  const ARCHIVE_CATEGORY = "__ARCHIVED__";
+  const ARCHIVE_RETENTION_DAYS = 30;
+  const DEFAULT_CATEGORY_NAME = "Category 1";
+
+  let accessToken = null;
+  let tokenClient = null;
+  let rootFolderId = null;
+  let archiveFolderId = null;
+
+  let currentCategory = "__ALL__";
+  let viewMode = "home"; // "home" | "folder"
+  let allImages = [];
+  let categories = []; // {name, color, driveId}
+
+  // ---------------- Auth ----------------
+  function authHeaders(){ return {Authorization: "Bearer " + accessToken}; }
+
+  function waitForGIS(){
+    return new Promise((resolve)=>{
+      (function check(){
+        if(window.google && window.google.accounts && window.google.accounts.oauth2) resolve();
+        else setTimeout(check, 100);
+      })();
+    });
+  }
+
+  async function startAuth(){
+    await waitForGIS();
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      prompt: "select_account",
+      callback: async (resp)=>{
+        if(resp.error){
+          document.getElementById("authStatus").textContent = "Sign-in didn't go through — please try again.";
+          return;
+        }
+        accessToken = resp.access_token;
+        document.getElementById("signInGate").style.display = "none";
+        document.getElementById("appRootWrap").style.display = "block";
+        await bootAfterAuth();
+      }
+    });
+    document.getElementById("googleSignInBtn").addEventListener("click", ()=>{
+      document.getElementById("authStatus").textContent = "Opening Google sign-in…";
+      tokenClient.requestAccessToken();
+    });
+  }
+
+  // ---------------- Drive helpers ----------------
+  async function driveListAll(query, fields){
+    let files = [];
+    let pageToken = "";
+    do{
+      const params = new URLSearchParams({q:query, fields:`nextPageToken, files(${fields})`, pageSize:"1000"});
+      if(pageToken) params.set("pageToken", pageToken);
+      const res = await fetch(`${DRIVE_API}/files?${params.toString()}`, {headers:authHeaders()});
+      const data = await res.json();
+      if(data.error) throw new Error(data.error.message || "Drive list error");
+      files = files.concat(data.files || []);
+      pageToken = data.nextPageToken || "";
+    } while(pageToken);
+    return files;
+  }
+
+  async function driveFindFolderByName(name, parentId){
+    const safeName = name.replace(/'/g, "\\'");
+    const q = `name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false and '${parentId}' in parents`;
+    const files = await driveListAll(q, "id,name,appProperties");
+    return files[0] || null;
+  }
+
+  async function driveCreateFolder(name, parentId, appProperties){
+    const res = await fetch(`${DRIVE_API}/files?fields=id,name,appProperties`, {
+      method:"POST",
+      headers:{...authHeaders(), "Content-Type":"application/json"},
+      body: JSON.stringify({name, mimeType:"application/vnd.google-apps.folder", parents:[parentId], appProperties: appProperties || {}})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message || "Couldn't create folder");
+    return data;
+  }
+
+  async function driveListChildFolders(parentId){
+    return driveListAll(`'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`, "id,name,appProperties");
+  }
+
+  async function driveListFiles(parentId){
+    return driveListAll(`'${parentId}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'`, "id,name,appProperties,createdTime");
+  }
+
+  async function driveUpdateFile(fileId, body){
+    const res = await fetch(`${DRIVE_API}/files/${fileId}?fields=id,name,appProperties`, {
+      method:"PATCH",
+      headers:{...authHeaders(), "Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message || "Couldn't update file");
+    return data;
+  }
+
+  async function driveMoveFile(fileId, addParentId, removeParentId){
+    const res = await fetch(`${DRIVE_API}/files/${fileId}?addParents=${addParentId}&removeParents=${removeParentId}&fields=id,parents`, {
+      method:"PATCH", headers:authHeaders()
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message || "Couldn't move file");
+    return data;
+  }
+
+  async function driveDeleteFile(fileId){
+    const res = await fetch(`${DRIVE_API}/files/${fileId}`, {method:"DELETE", headers:authHeaders()});
+    if(!res.ok && res.status !== 404) throw new Error("Delete failed: " + res.status);
+  }
+
+  async function driveUploadFile(file, parentId, appProperties){
+    const metadata = {name:file.name, parents:[parentId], appProperties};
+    const form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], {type:"application/json"}));
+    form.append("file", file);
+    const res = await fetch(`${UPLOAD_API}/files?uploadType=multipart&fields=id,name,appProperties,createdTime`, {
+      method:"POST", headers:authHeaders(), body:form
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message || "Upload failed");
+    return data;
+  }
+
+  async function ensureRootFolder(){
+    const existing = await driveFindFolderByName(ROOT_FOLDER_NAME, "root");
+    if(existing) return existing.id;
+    const created = await driveCreateFolder(ROOT_FOLDER_NAME, "root", {});
+    return created.id;
+  }
+  async function ensureArchiveFolder(){
+    const existing = await driveFindFolderByName(ARCHIVE_FOLDER_NAME, rootFolderId);
+    if(existing) return existing.id;
+    const created = await driveCreateFolder(ARCHIVE_FOLDER_NAME, rootFolderId, {});
+    return created.id;
+  }
+
+  // ---------------- Load library from Drive ----------------
+  function fileToImageRecord(f, categoryName, parentId){
+    const props = f.appProperties || {};
+    return {
+      id: f.id, driveId: f.id, parentId,
+      hash: props.hash || "",
+      filename: f.name,
+      category: categoryName,
+      dateAdded: props.dateAdded ? Number(props.dateAdded) : (f.createdTime ? new Date(f.createdTime).getTime() : Date.now()),
+      archivedAt: props.archivedAt ? Number(props.archivedAt) : undefined,
+      dataURL: null
+    };
+  }
+
+  async function loadCategoriesFromDrive(){
+    const folders = await driveListChildFolders(rootFolderId);
+    categories = folders
+      .filter(f=>f.name !== ARCHIVE_FOLDER_NAME)
+      .map(f=>({name:f.name, color:(f.appProperties && f.appProperties.color) || undefined, driveId:f.id}));
+  }
+
+  async function loadAllImages(){
+    allImages = [];
+    for(const cat of categories){
+      const files = await driveListFiles(cat.driveId);
+      for(const f of files) allImages.push(fileToImageRecord(f, cat.name, cat.driveId));
+    }
+    if(archiveFolderId){
+      const files = await driveListFiles(archiveFolderId);
+      for(const f of files) allImages.push(fileToImageRecord(f, ARCHIVE_CATEGORY, archiveFolderId));
+    }
+  }
+
+  async function purgeExpiredArchive(){
+    const cutoffMs = ARCHIVE_RETENTION_DAYS*24*60*60*1000;
+    const now = Date.now();
+    const expired = allImages.filter(i=>i.category===ARCHIVE_CATEGORY && i.archivedAt && (now - i.archivedAt > cutoffMs));
+    for(const img of expired){
+      try{ await driveDeleteFile(img.driveId); }catch(e){ /* skip, will retry next load */ }
+    }
+    const expiredIds = new Set(expired.map(i=>i.id));
+    allImages = allImages.filter(i=>!expiredIds.has(i.id));
+  }
+
+  async function bootAfterAuth(){
+    try{
+      document.getElementById("authStatus").textContent = "";
+      rootFolderId = await ensureRootFolder();
+      archiveFolderId = await ensureArchiveFolder();
+      await loadCategoriesFromDrive();
+      if(categories.length === 0){
+        const created = await driveCreateFolder(DEFAULT_CATEGORY_NAME, rootFolderId, {});
+        categories.push({name:DEFAULT_CATEGORY_NAME, driveId:created.id});
+      }
+      await loadAllImages();
+      await purgeExpiredArchive();
+      renderHome();
+    }catch(err){
+      showToast("Couldn't load your Drive library — please refresh and try again.");
+    }
+  }
+
+  function visibleImages(){
+    return allImages.filter(i=>i.category !== ARCHIVE_CATEGORY);
+  }
+
+  // ---------------- Hashing ----------------
+  async function hashFile(file){
+    const buf = await file.arrayBuffer();
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function guessCategory(filename){
+    const lower = filename.toLowerCase();
+    for(const cat of categories){
+      const nameLower = cat.name.toLowerCase();
+      if(nameLower === "category 1") continue;
+      if(lower.includes(nameLower)) return cat.name;
+    }
+    return categories.some(c=>c.name===DEFAULT_CATEGORY_NAME) ? DEFAULT_CATEGORY_NAME : (categories[0] ? categories[0].name : DEFAULT_CATEGORY_NAME);
+  }
+
+  // ---------------- Lazy image loading ----------------
+  const imgObserver = new IntersectionObserver((entries)=>{
+    entries.forEach((entry)=>{
+      if(!entry.isIntersecting) return;
+      const el = entry.target;
+      imgObserver.unobserve(el);
+      loadImageInto(el, el.dataset.imgId);
+    });
+  }, {rootMargin:"200px"});
+
+  async function loadImageInto(el, id){
+    const rec = allImages.find(i=>i.id===id);
+    if(!rec) return;
+    if(rec.dataURL){ el.src = rec.dataURL; return; }
+    try{
+      const res = await fetch(`${DRIVE_API}/files/${rec.driveId}?alt=media`, {headers:authHeaders()});
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      rec.dataURL = url;
+      el.src = url;
+    }catch(err){ /* leave placeholder background */ }
+  }
+
+  // ---------------- Upload flow ----------------
+  document.getElementById("uploadBtn").addEventListener("click", ()=>{
+    document.getElementById("fileInput").click();
+  });
+  document.getElementById("fileInput").addEventListener("change", async (e)=>{
+    const files = Array.from(e.target.files);
+    if(files.length === 0) return;
+    showToast(`Sorting ${files.length} image${files.length>1?"s":""}...`);
+    let added = 0, dupes = 0, failed = 0;
+    const existingHashes = new Set(allImages.map(img=>img.hash));
+
+    for(const file of files){
+      if(!file.type.startsWith("image/")) continue;
+      try{
+        const hash = await hashFile(file);
+        if(existingHashes.has(hash)){ dupes++; continue; }
+        const categoryName = guessCategory(file.name);
+        const cat = categories.find(c=>c.name===categoryName);
+        const dateAdded = Date.now();
+        const uploaded = await driveUploadFile(file, cat.driveId, {hash, dateAdded:String(dateAdded)});
+        const localURL = URL.createObjectURL(file);
+        allImages.push({
+          id: uploaded.id, driveId: uploaded.id, parentId: cat.driveId,
+          hash, filename:file.name, category:categoryName, dateAdded,
+          archivedAt: undefined, dataURL: localURL
+        });
+        existingHashes.add(hash);
+        added++;
+      }catch(err){
+        failed++;
+      }
+    }
+    e.target.value = "";
+    refreshCurrentView();
+    let msg = `Done! Added ${added} image${added!==1?"s":""}`;
+    if(dupes>0) msg += `, skipped ${dupes} duplicate${dupes!==1?"s":""}`;
+    if(failed>0) msg += `, ${failed} failed to upload`;
+    showToast(msg + ".");
+  });
+
+  // ---------------- View switching ----------------
+  function refreshCurrentView(){
+    if(viewMode === "home") renderHome();
+    else { renderFolders(); renderGallery(); }
+  }
+
+  function goHome(){
+    viewMode = "home";
+    document.getElementById("homeView").style.display = "block";
+    document.getElementById("folderView").style.display = "none";
+    document.getElementById("searchInput").value = "";
+    renderHome();
+  }
+  function enterFolder(catName){
+    currentCategory = catName;
+    viewMode = "folder";
+    document.getElementById("homeView").style.display = "none";
+    document.getElementById("folderView").style.display = "flex";
+    renderFolders();
+    renderGallery();
+  }
+  document.getElementById("backBtn").addEventListener("click", goHome);
+
+  // ---------------- Home rendering ----------------
+  const tileColors = ["#FFE9A8","#BFEAE4","#FFD1E3","#DCD1F2","#FFDCC2","#CBEFD6","#C9E4FF","#F3D9F5","#FFF3B0","#D4F0F0","#E8D5C4","#D6E8C4"];
+  let openColorPopoverFor = null;
+
+  function colorPopoverHTML(){
+    return `<div class="color-popover">
+      <button class="rename-opt">✏ Rename Folder</button>
+      <div class="swatch-grid">${tileColors.map(c=>`<button class="swatch" data-color="${c}" style="background:${c};"></button>`).join("")}</div>
+    </div>`;
+  }
+  function toggleColorPopover(catName){
+    openColorPopoverFor = (openColorPopoverFor === catName) ? null : catName;
+    refreshCurrentView();
+  }
+  async function setCategoryColor(catName, color){
+    const cat = categories.find(c=>c.name===catName);
+    openColorPopoverFor = null;
+    if(!cat){ refreshCurrentView(); return; }
+    try{
+      await driveUpdateFile(cat.driveId, {appProperties:{color}});
+      cat.color = color;
+      refreshCurrentView();
+      showToast(`Updated color for "${catName}".`);
+    }catch(err){
+      refreshCurrentView();
+      showToast("Couldn't save that color — try again.");
+    }
+  }
+  document.addEventListener("click", (e)=>{
+    if(openColorPopoverFor && !e.target.closest(".color-popover") && !e.target.classList.contains("folder-gear")){
+      openColorPopoverFor = null;
+      refreshCurrentView();
+    }
+  });
+
+  function renderHome(){
+    const grid = document.getElementById("tileGrid");
+    grid.innerHTML = "";
+
+    const allTile = document.createElement("div");
+    allTile.className = "tile all-tile";
+    allTile.setAttribute("role","button");
+    allTile.setAttribute("tabindex","0");
+    allTile.innerHTML = `<div class="tile-icon">🗂</div><div class="tile-name">All Images</div><div class="tile-count">${visibleImages().length}</div>`;
+    allTile.onclick = ()=>enterFolder("__ALL__");
+    grid.appendChild(allTile);
+
+    categories.forEach((cat, idx)=>{
+      const count = visibleImages().filter(i=>i.category===cat.name).length;
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      tile.setAttribute("role","button");
+      tile.setAttribute("tabindex","0");
+      tile.style.background = cat.color || tileColors[idx % tileColors.length];
+      tile.innerHTML = `
+        <div class="folder-tools corner">
+          <button class="folder-gear" title="Folder color">⚙</button>
+          <button class="folder-del-x" title="Delete folder">✕</button>
+        </div>
+        ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}
+        <div class="tile-icon">📁</div><div class="tile-name">${cat.name}</div><div class="tile-count">${count}</div>`;
+      tile.onclick = (e)=>{
+        if(e.target.classList.contains("rename-opt")){ e.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.name); return; }
+        if(e.target.classList.contains("swatch")){ e.stopPropagation(); setCategoryColor(cat.name, e.target.dataset.color); return; }
+        if(e.target.classList.contains("folder-gear")){ e.stopPropagation(); toggleColorPopover(cat.name); return; }
+        if(e.target.classList.contains("folder-del-x")){ e.stopPropagation(); confirmDeleteCategory(cat.name); return; }
+        if(e.target.closest(".color-popover")){ e.stopPropagation(); return; }
+        enterFolder(cat.name);
+      };
+      grid.appendChild(tile);
+    });
+  }
+
+  // ---------------- Folder-view sidebar rendering ----------------
+  function countFor(catName){ return visibleImages().filter(i=>i.category===catName).length; }
+
+  function renderFolders(){
+    const list = document.getElementById("folderList");
+    list.innerHTML = "";
+
+    const allBtn = document.createElement("button");
+    allBtn.className = "folder-btn" + (currentCategory==="__ALL__" ? " active":"");
+    allBtn.style.background = "#fff";
+    allBtn.innerHTML = `<span>🗂 All Images</span><span class="count">${visibleImages().length}</span>`;
+    allBtn.onclick = ()=>{ currentCategory="__ALL__"; document.getElementById("searchInput").value=""; renderFolders(); renderGallery(); };
+    list.appendChild(allBtn);
+
+    categories.forEach((cat, idx)=>{
+      const btn = document.createElement("div");
+      btn.className = "folder-btn" + (currentCategory===cat.name ? " active":"");
+      btn.setAttribute("role","button");
+      btn.setAttribute("tabindex","0");
+      btn.style.background = cat.color || tileColors[idx % tileColors.length];
+      btn.innerHTML = `<span>${cat.name}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span class="count">${countFor(cat.name)}</span>
+          <div class="folder-tools">
+            <button class="folder-gear" title="Folder color">⚙</button>
+            <button class="folder-del-x" title="Delete folder">✕</button>
+          </div>
+        </span>
+        ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}`;
+      btn.onclick = (ev)=>{
+        if(ev.target.classList.contains("rename-opt")){ ev.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.name); return; }
+        if(ev.target.classList.contains("swatch")){ ev.stopPropagation(); setCategoryColor(cat.name, ev.target.dataset.color); return; }
+        if(ev.target.classList.contains("folder-gear")){ ev.stopPropagation(); toggleColorPopover(cat.name); return; }
+        if(ev.target.classList.contains("folder-del-x")){ ev.stopPropagation(); confirmDeleteCategory(cat.name); return; }
+        if(ev.target.closest(".color-popover")){ ev.stopPropagation(); return; }
+        currentCategory = cat.name;
+        document.getElementById("searchInput").value="";
+        renderFolders();
+        renderGallery();
+      };
+      list.appendChild(btn);
+    });
+  }
+
+  function confirmDeleteCategory(name){
+    showConfirm(
+      `Delete "${name}"? All images inside will move to an archive for ${ARCHIVE_RETENTION_DAYS} days, then be permanently removed. You won't see them in your folders during that time.`,
+      async ()=>{ await deleteCategory(name); }
+    );
+  }
+
+  async function deleteCategory(name){
+    try{
+      const cat = categories.find(c=>c.name===name);
+      if(!cat) return;
+      const affected = allImages.filter(i=>i.category===name);
+      for(const img of affected){
+        await driveMoveFile(img.driveId, archiveFolderId, cat.driveId);
+        await driveUpdateFile(img.driveId, {appProperties:{hash:img.hash, dateAdded:String(img.dateAdded), archivedAt:String(Date.now())}});
+        img.category = ARCHIVE_CATEGORY;
+        img.parentId = archiveFolderId;
+        img.archivedAt = Date.now();
+      }
+      await driveDeleteFile(cat.driveId);
+      categories = categories.filter(c=>c.name!==name);
+      if(categories.length===0){
+        const created = await driveCreateFolder(DEFAULT_CATEGORY_NAME, rootFolderId, {});
+        categories.push({name:DEFAULT_CATEGORY_NAME, driveId:created.id});
+      }
+      if(currentCategory===name){ currentCategory="__ALL__"; }
+      refreshCurrentView();
+      showToast(`"${name}" deleted. Its images are archived for ${ARCHIVE_RETENTION_DAYS} days.`);
+    }catch(err){
+      showToast("Couldn't delete that folder — try again.");
+    }
+  }
+
+  // ---------------- Rename category ----------------
+  let renameTargetCat = null;
+  function openRenameModal(catName){
+    renameTargetCat = catName;
+    document.getElementById("renameInput").value = catName;
+    document.getElementById("renameBg").classList.add("open");
+    refreshCurrentView();
+  }
+  document.getElementById("renameCancel").onclick = ()=>{ document.getElementById("renameBg").classList.remove("open"); };
+  document.getElementById("renameBg").addEventListener("click",(e)=>{ if(e.target.id==="renameBg") document.getElementById("renameBg").classList.remove("open"); });
+  document.getElementById("renameOk").onclick = async ()=>{
+    const newName = document.getElementById("renameInput").value.trim();
+    document.getElementById("renameBg").classList.remove("open");
+    if(!newName || newName===renameTargetCat) return;
+    await renameCategory(renameTargetCat, newName);
+  };
+  async function renameCategory(oldName, newName){
+    if(categories.some(c=>c.name.toLowerCase()===newName.toLowerCase() && c.name!==oldName)){
+      showToast("That folder name already exists.");
+      return;
+    }
+    const cat = categories.find(c=>c.name===oldName);
+    if(!cat) return;
+    try{
+      await driveUpdateFile(cat.driveId, {name:newName});
+      cat.name = newName;
+      allImages.forEach(img=>{ if(img.category===oldName) img.category=newName; });
+      if(currentCategory===oldName) currentCategory=newName;
+      refreshCurrentView();
+      showToast(`Renamed to "${newName}".`);
+    }catch(err){
+      showToast("Couldn't rename that folder — try again.");
+    }
+  }
+
+  // ---------------- Gallery rendering ----------------
+  function renderGallery(){
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("emptyState");
+    const title = document.getElementById("galleryTitle");
+    const countTag = document.getElementById("galleryCount");
+    const searchScope = document.getElementById("searchScope");
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    let pool;
+    if(currentCategory === "__ALL__"){
+      pool = visibleImages();
+      title.textContent = "All Images";
+      searchScope.textContent = "in All";
+    } else {
+      pool = visibleImages().filter(i=>i.category===currentCategory);
+      title.textContent = currentCategory;
+      searchScope.textContent = `in ${currentCategory}`;
+    }
+    if(query) pool = pool.filter(i=>i.filename.toLowerCase().includes(query));
+    pool = pool.slice().sort((a,b)=>b.dateAdded - a.dateAdded);
+
+    countTag.textContent = `${pool.length} image${pool.length!==1?"s":""}`;
+    grid.innerHTML = "";
+
+    if(pool.length===0){ empty.style.display = "block"; return; }
+    empty.style.display = "none";
+
+    for(const img of pool){
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const imEl = document.createElement("img");
+      imEl.loading = "lazy";
+      imEl.onclick = ()=>openModal(img.id);
+      if(img.dataURL){
+        imEl.src = img.dataURL;
+      } else {
+        imEl.dataset.imgId = img.id;
+        imgObserver.observe(imEl);
+      }
+      card.appendChild(imEl);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "del-btn";
+      delBtn.textContent = "✕";
+      delBtn.title = "Delete";
+      delBtn.onclick = (e)=>{ e.stopPropagation(); confirmDeleteImage(img.id); };
+      card.appendChild(delBtn);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const fname = document.createElement("div");
+      fname.className = "fname";
+      fname.textContent = img.filename;
+      fname.title = img.filename;
+      meta.appendChild(fname);
+
+      const sel = document.createElement("select");
+      sel.className = "moveSel";
+      categories.forEach(cat=>{
+        const opt = document.createElement("option");
+        opt.value = cat.name;
+        opt.textContent = "Move to: " + cat.name;
+        if(cat.name === img.category) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onclick = (e)=>e.stopPropagation();
+      sel.onchange = async (e)=>{
+        e.stopPropagation();
+        const newCatName = sel.value;
+        const newCat = categories.find(c=>c.name===newCatName);
+        if(!newCat) return;
+        try{
+          await driveMoveFile(img.driveId, newCat.driveId, img.parentId);
+          img.category = newCatName;
+          img.parentId = newCat.driveId;
+          refreshCurrentView();
+          showToast(`Moved to ${newCatName}`);
+        }catch(err){
+          showToast("Couldn't move that image — try again.");
+        }
+      };
+      meta.appendChild(sel);
+      card.appendChild(meta);
+      grid.appendChild(card);
+    }
+  }
+
+  function confirmDeleteImage(id){
+    showConfirm("Permanently delete this image? This can't be undone.", async ()=>{ await removeImage(id); });
+  }
+  async function removeImage(id){
+    const img = allImages.find(i=>i.id===id);
+    if(!img) return;
+    try{
+      await driveDeleteFile(img.driveId);
+      allImages = allImages.filter(i=>i.id!==id);
+      refreshCurrentView();
+      closeModal();
+      showToast("Image deleted.");
+    }catch(err){
+      showToast("Couldn't delete that image — try again.");
+    }
+  }
+
+  // ---------------- Image preview modal ----------------
+  let modalImgId = null;
+  function openModal(id){
+    const img = allImages.find(i=>i.id===id);
+    if(!img) return;
+    modalImgId = id;
+    document.getElementById("modalImg").src = img.dataURL || "";
+    if(!img.dataURL){
+      fetch(`${DRIVE_API}/files/${img.driveId}?alt=media`, {headers:authHeaders()})
+        .then(res=>res.blob())
+        .then(blob=>{
+          const url = URL.createObjectURL(blob);
+          img.dataURL = url;
+          if(modalImgId===id) document.getElementById("modalImg").src = url;
+        }).catch(()=>{});
+    }
+    document.getElementById("modalName").textContent = img.filename;
+    document.getElementById("modalDate").textContent = "Added " + new Date(img.dateAdded).toLocaleDateString();
+    const sel = document.getElementById("modalMoveSel");
+    sel.innerHTML = "";
+    categories.forEach(cat=>{
+      const opt = document.createElement("option");
+      opt.value = cat.name;
+      opt.textContent = cat.name;
+      if(cat.name===img.category) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById("modalBg").classList.add("open");
+  }
+  function closeModal(){
+    document.getElementById("modalBg").classList.remove("open");
+    modalImgId = null;
+  }
+  document.getElementById("modalClose").onclick = closeModal;
+  document.getElementById("modalBg").addEventListener("click",(e)=>{ if(e.target.id==="modalBg") closeModal(); });
+  document.getElementById("modalMoveSel").addEventListener("change", async (e)=>{
+    const img = allImages.find(i=>i.id===modalImgId);
+    if(!img) return;
+    const newCat = categories.find(c=>c.name===e.target.value);
+    if(!newCat) return;
+    try{
+      await driveMoveFile(img.driveId, newCat.driveId, img.parentId);
+      img.category = newCat.name;
+      img.parentId = newCat.driveId;
+      refreshCurrentView();
+      showToast(`Moved to ${img.category}`);
+    }catch(err){
+      showToast("Couldn't move that image — try again.");
+    }
+  });
+  document.getElementById("modalDelete").addEventListener("click", ()=>{
+    if(modalImgId!==null) confirmDeleteImage(modalImgId);
+  });
+
+  // ---------------- Confirm modal (generic) ----------------
+  let pendingConfirmAction = null;
+  function showConfirm(message, onConfirm){
+    document.getElementById("confirmMsg").textContent = message;
+    pendingConfirmAction = onConfirm;
+    document.getElementById("confirmBg").classList.add("open");
+  }
+  function hideConfirm(){
+    document.getElementById("confirmBg").classList.remove("open");
+    pendingConfirmAction = null;
+  }
+  document.getElementById("confirmCancel").onclick = hideConfirm;
+  document.getElementById("confirmOk").onclick = async ()=>{
+    const action = pendingConfirmAction;
+    hideConfirm();
+    if(action) await action();
+  };
+  document.getElementById("confirmBg").addEventListener("click",(e)=>{ if(e.target.id==="confirmBg") hideConfirm(); });
+
+  // ---------------- Search ----------------
+  document.getElementById("searchInput").addEventListener("input", ()=>{
+    const val = document.getElementById("searchInput").value.trim();
+    if(viewMode === "home" && val !== ""){
+      enterFolder("__ALL__");
+    } else if(viewMode === "folder"){
+      renderGallery();
+    }
+  });
+
+  // ---------------- Add category ----------------
+  document.getElementById("homeAddCatBtn").addEventListener("click", ()=>{
+    addCategory(document.getElementById("homeNewCatName").value.trim());
+    document.getElementById("homeNewCatName").value = "";
+  });
+  document.getElementById("homeNewCatName").addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"){
+      addCategory(document.getElementById("homeNewCatName").value.trim());
+      document.getElementById("homeNewCatName").value = "";
+    }
+  });
+  document.getElementById("addCatBtn").addEventListener("click", ()=>{
+    addCategory(document.getElementById("newCatName").value.trim());
+    document.getElementById("newCatName").value = "";
+  });
+  document.getElementById("newCatName").addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"){
+      addCategory(document.getElementById("newCatName").value.trim());
+      document.getElementById("newCatName").value = "";
+    }
+  });
+  async function addCategory(name){
+    if(!name) return;
+    try{
+      if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase())){
+        showToast("That folder already exists.");
+        return;
+      }
+      const created = await driveCreateFolder(name, rootFolderId, {});
+      categories.push({name, color:undefined, driveId:created.id});
+      refreshCurrentView();
+      showToast(`Folder "${name}" created.`);
+    }catch(err){
+      showToast("Couldn't create that folder — try again.");
+    }
+  }
+
+  // ---------------- Sign out ----------------
+  document.getElementById("signOutBtn").addEventListener("click", ()=>{
+    try{ if(accessToken && window.google) google.accounts.oauth2.revoke(accessToken, ()=>{}); }catch(e){}
+    accessToken = null;
+    location.reload();
+  });
+
+  // ---------------- Toast ----------------
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove("show"), 3200);
+  }
+
+  window.addEventListener("error", ()=>{ showToast("Something went wrong — please try that again."); });
+  window.addEventListener("unhandledrejection", ()=>{ showToast("Something went wrong — please try that again."); });
+
+  startAuth();
+})();
+</script>
+</body>
+</html>
