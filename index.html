@@ -62,8 +62,17 @@
     display:flex; align-items:center; justify-content:center;
     font-size:0.95rem;
   }
-  .brand h1{ font-size:1.15rem; font-weight:600; }
-  .brand .sub{ font-size:0.78rem; color:var(--muted); margin-top:1px; }
+  .breadcrumb{ display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+  .breadcrumb .crumb-link{
+    font-family:'Inter', sans-serif; font-weight:600; font-size:0.86rem;
+    color:var(--muted); text-decoration:none; cursor:pointer;
+  }
+  .breadcrumb .crumb-link:hover{ color:var(--accent-deep); }
+  .breadcrumb .crumb-sep{ color:var(--line); font-size:0.86rem; }
+  .breadcrumb .crumb-current{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:1.05rem; color:var(--ink);
+  }
+  .brand .sub{ font-size:0.78rem; color:var(--muted); margin-top:3px; }
 
   .search-wrap{ flex:1 1 260px; min-width:180px; position:relative; }
   #searchInput{
@@ -379,11 +388,16 @@
 
 <div id="appRootWrap" style="display:none;">
 <header>
-  <a href="#" id="hubLink" class="back-btn" style="margin-bottom:0;" title="Back to My Tools">← My Tools</a>
   <div class="brand">
     <div class="brand-mark">🗂️</div>
     <div>
-      <h1>Image Vault and Organizer</h1>
+      <nav class="breadcrumb">
+        <a href="#" class="crumb-link" id="hubLink">Main Hub</a>
+        <span class="crumb-sep">/</span>
+        <a href="#" class="crumb-link" id="myToolsLink">My Tools</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">Image Vault and Organizer</span>
+      </nav>
       <div class="sub">Sort once. Find forever.</div>
     </div>
   </div>
@@ -680,10 +694,15 @@
      clear() internals only, same pattern as Settings above.
   ============================================================ */
   const TOOL_ID = "vault"; // unique per tool — "prompt", "vault", "analyzer"
-  const HUB_URL = "#"; // PLACEHOLDER — replace with the real My Tools dashboard URL once the hub exists
-  document.getElementById("hubLink").href = HUB_URL;
+  const MAIN_HUB_URL = "#"; // PLACEHOLDER — replace with the real landing/storefront URL once the hub exists
+  const MY_TOOLS_URL = "#"; // PLACEHOLDER — replace with the real My Tools dashboard URL once the hub exists
+  document.getElementById("hubLink").href = MAIN_HUB_URL;
   document.getElementById("hubLink").addEventListener("click", (e)=>{
-    if(HUB_URL === "#"){ e.preventDefault(); showToast("This will link to My Tools once the hub is live."); }
+    if(MAIN_HUB_URL === "#"){ e.preventDefault(); showToast("This will link to the Main Hub once it's live."); }
+  });
+  document.getElementById("myToolsLink").href = MY_TOOLS_URL;
+  document.getElementById("myToolsLink").addEventListener("click", (e)=>{
+    if(MY_TOOLS_URL === "#"){ e.preventDefault(); showToast("This will link to My Tools once the hub is live."); }
   });
   const TOOL_DISPLAY_NAMES = {
     prompt: "Prompt Builder",
