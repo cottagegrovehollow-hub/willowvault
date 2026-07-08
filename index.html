@@ -3,352 +3,362 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Willow's Image Vault</title>
+<title>Vault Organizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
+  /* ==========================================================
+     DESIGN TOKENS — shared visual language with the other two
+     tools + main landing page, so the whole toolkit feels like
+     one product. Accent color is overridable at runtime (see
+     Settings > Appearance) via the --accent variable.
+  ========================================================== */
   :root{
-    --pink:#FF3E7F;
-    --yellow:#FFC93C;
-    --teal:#2EC4B6;
-    --purple:#6C4AB6;
-    --red:#E03A3A;
-    --cream:#FFF9F0;
-    --ink:#1A1A2E;
-    --paper:#FFFFFF;
+    --ink:#1B1F2B;
+    --paper:#F6F4EE;
+    --paper-raised:#FFFFFF;
+    --line:#E1DDCF;
+    --muted:#8A8676;
+    --accent:#E8A33D;        /* default accent — user-changeable */
+    --accent-deep:#C7841F;
+    --teal:#2F9E8F;
+    --coral:#E2604F;
+    --shadow:rgba(27,31,43,0.07);
+    --radius:12px;
   }
-  *{box-sizing:border-box; cursor:default; user-select:none; -webkit-user-select:none;}
-  input[type="text"], textarea{cursor:text; user-select:text; -webkit-user-select:text;}
-  html,body{margin:0;padding:0;}
+  html.dark{
+    --ink:#F0EEE6;
+    --paper:#14161F;
+    --paper-raised:#1D2130;
+    --line:#2C3040;
+    --muted:#8D8AA0;
+    --shadow:rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
   body{
-    background:var(--cream);
-    background-image:radial-gradient(circle at 10px 10px, rgba(26,26,46,0.05) 2px, transparent 2px);
-    background-size:26px 26px;
-    font-family:'Nunito', system-ui, sans-serif;
+    margin:0;
+    background:var(--paper);
     color:var(--ink);
-    min-height:100vh;
+    font-family:'Inter', sans-serif;
+    transition:background .15s, color .15s;
   }
-  h1,h2,h3,.display{font-family:'Baloo 2', system-ui, sans-serif;}
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; margin:0; }
+  button{ font-family:inherit; }
 
   /* ---------- Header ---------- */
   header{
-    padding:22px 24px 16px;
     display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-    border-bottom:4px solid var(--ink);
-    background:var(--paper);
+    padding:18px 28px;
+    border-bottom:1px solid var(--line);
+    background:var(--paper-raised);
   }
-  header .title-wrap{display:flex; align-items:center; gap:12px;}
-  .blob{
-    width:46px;height:46px;flex:0 0 auto;
-    background:var(--yellow);
-    border:3px solid var(--ink);
-    border-radius:42% 58% 63% 37% / 41% 44% 56% 59%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:22px;
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:30px; height:30px; border-radius:8px;
+    background:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.95rem;
   }
-  h1{margin:0; font-size:1.6rem; font-weight:800; letter-spacing:0.3px;}
-  header p.sub{margin:2px 0 0; font-size:0.85rem; color:#55536b; font-weight:600;}
+  .brand h1{ font-size:1.15rem; font-weight:600; }
+  .brand .sub{ font-size:0.78rem; color:var(--muted); margin-top:1px; }
 
-  .search-wrap{flex:1 1 320px; min-width:220px; position:relative;}
+  .search-wrap{ flex:1 1 260px; min-width:180px; position:relative; }
   #searchInput{
-    width:100%; padding:12px 44px 12px 16px; font-size:0.95rem;
-    border:3px solid var(--ink); border-radius:14px; font-family:'Nunito',sans-serif;
-    font-weight:700; background:var(--cream); outline:none;
+    width:100%; padding:10px 14px; font-size:0.9rem;
+    border:1px solid var(--line); border-radius:9px;
+    background:var(--paper); color:var(--ink); outline:none;
+    font-family:'Inter',sans-serif;
   }
-  #searchInput:focus{box-shadow:4px 4px 0 var(--yellow);}
-  .search-scope{
-    position:absolute; right:10px; top:50%; transform:translateY(-50%);
-    font-size:0.7rem; font-weight:800; color:var(--yellow); background:#fff;
-    padding:3px 8px; border-radius:8px; border:2px solid var(--yellow);
-    pointer-events:none; white-space:nowrap;
-  }
+  #searchInput:focus{ border-color:var(--accent); }
 
-  .upload-btn{
-    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem;
-    padding:12px 20px; border-radius:14px; cursor:pointer;
-    box-shadow:4px 4px 0 var(--ink); transition:transform .08s ease; white-space:nowrap;
+  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .btn{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600; font-size:0.86rem;
+    padding:9px 16px; border-radius:9px; border:none; cursor:pointer;
+    transition:opacity .15s, transform .08s;
   }
-  .upload-btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink);}
-  #fileInput{display:none;}
+  .btn:active{ transform:scale(0.97); }
+  .btn-accent{ background:var(--accent); color:#1B1F2B; }
+  .btn-accent:hover{ background:var(--accent-deep); }
+  .btn-ghost{ background:none; border:1px solid var(--line); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--accent); }
+  .icon-btn{
+    width:36px; height:36px; border-radius:9px; border:1px solid var(--line);
+    background:var(--paper-raised); cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; justify-content:center; color:var(--ink);
+  }
+  .icon-btn:hover{ border-color:var(--accent); }
+  #fileInput{ display:none; }
 
   /* ---------- App shell ---------- */
-  .app-shell{max-width:1400px; margin:0 auto;}
+  .app-shell{ max-width:1300px; margin:0 auto; }
 
   /* ---------- Home dashboard ---------- */
-  .home-view{padding:30px 24px 60px;}
-  .home-title{margin:0 0 20px; font-size:1.5rem;}
-  .tile-grid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:18px;
-  }
+  .home-view{ padding:32px 28px 60px; }
+  .home-title{ font-size:1.3rem; margin-bottom:18px; }
+  .tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:14px; }
   .tile{
-    border:3px solid var(--ink); border-radius:16px; padding:20px 16px;
-    cursor:pointer; text-align:left; font-family:'Baloo 2',sans-serif; font-weight:700;
-    box-shadow:5px 5px 0 var(--ink); transition:transform .08s ease; position:relative;
-    min-height:110px; display:flex; flex-direction:column; justify-content:space-between;
+    background:var(--paper-raised);
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; cursor:pointer; text-align:left;
+    transition:border-color .15s, transform .1s;
+    min-height:96px; display:flex; flex-direction:column; justify-content:space-between;
+    position:relative;
   }
-  .tile:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink);}
-  .tile .tile-icon{font-size:1.6rem;}
-  .tile .tile-name{font-size:1.05rem; margin-top:8px;}
-  .tile .tile-count{
-    align-self:flex-start; margin-top:10px; background:var(--ink); color:#fff;
-    font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px;
-    font-family:'Nunito',sans-serif;
+  .tile:hover{ border-color:var(--accent); transform:translateY(-1px); }
+  .tile.all-tile{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 10%, var(--paper-raised)); }
+  .tile-name{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.95rem; }
+  .tile-count{
+    align-self:flex-start; margin-top:8px;
+    background:var(--paper); color:var(--muted);
+    font-size:0.72rem; font-weight:600; padding:2px 9px; border-radius:20px;
   }
-  .tile.all-tile{background:var(--yellow);}
-  .tile{position:relative;}
+  .tile-color-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+
   .folder-tools{
-    display:flex; gap:6px; align-items:center; overflow:hidden;
-    width:0; opacity:0;
-    transition:width .18s ease, opacity .18s ease;
+    display:flex; gap:4px; position:absolute; top:12px; right:12px;
+    opacity:0; transition:opacity .12s;
   }
-  .folder-tools.corner{position:absolute; top:8px; right:8px;}
+  .tile:hover .folder-tools, .folder-row:hover .folder-tools{ opacity:1; }
   .folder-gear, .folder-del-x{
-    border:2px solid var(--ink); border-radius:50%; width:26px; height:26px; flex:0 0 auto;
-    font-weight:800; cursor:pointer; line-height:1; padding:0;
-    display:flex; align-items:center; justify-content:center; font-size:0.8rem;
-    font-family:'Nunito',sans-serif;
+    width:24px; height:24px; border-radius:6px; border:1px solid var(--line);
+    background:var(--paper-raised); cursor:pointer; font-size:0.75rem;
+    display:flex; align-items:center; justify-content:center; color:var(--muted);
   }
-  .folder-gear{background:#fff; color:var(--ink);}
-  .folder-del-x{background:var(--pink); color:#fff;}
-  .tile:hover .folder-tools, .tile:focus-within .folder-tools,
-  .folder-btn:hover .folder-tools, .folder-btn:focus-within .folder-tools{
-    width:64px; opacity:1;
-  }
+  .folder-gear:hover{ border-color:var(--accent); color:var(--ink); }
+  .folder-del-x:hover{ border-color:var(--coral); color:var(--coral); }
+
   .color-popover{
-    position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); z-index:40;
-    background:#fff; border:3px solid var(--ink); border-radius:12px; padding:8px;
-    box-shadow:4px 4px 0 var(--ink); display:flex; flex-direction:column; gap:8px;
-    width:150px;
+    position:absolute; top:calc(100% + 6px); right:0; z-index:40;
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:10px;
+    padding:10px; box-shadow:0 6px 18px var(--shadow);
+    display:flex; flex-direction:column; gap:8px; width:150px;
   }
   .color-popover .rename-opt{
-    width:100%; padding:6px 8px; border:2px solid var(--ink); border-radius:8px; background:#fff;
-    font-weight:800; font-size:0.72rem; cursor:pointer; font-family:'Nunito',sans-serif;
+    width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:7px;
+    background:var(--paper); font-weight:600; font-size:0.75rem; cursor:pointer;
+    color:var(--ink); font-family:'Inter',sans-serif;
   }
-  .swatch-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px;}
+  .swatch-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
   .color-popover .swatch{
-    width:24px; height:24px; border-radius:50%; border:2px solid var(--ink); cursor:pointer; padding:0;
-  }
-  .tile.add-tile{
-    background:var(--paper); border-style:dashed; display:flex; align-items:center;
-    justify-content:center; text-align:center; font-size:1.05rem; color:#6b6884;
+    width:22px; height:22px; border-radius:50%; border:1px solid var(--line); cursor:pointer; padding:0;
   }
 
-  .home-add-folder{
-    display:flex; gap:10px; margin-top:22px; width:100%;
-  }
+  .home-add-folder{ display:flex; gap:8px; margin-top:20px; max-width:420px; }
   .home-add-folder input{
-    flex:1; padding:12px 14px; border:3px solid var(--ink); border-radius:12px;
-    font-family:'Nunito',sans-serif; font-weight:700; font-size:0.9rem; background:var(--cream);
+    flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:8px;
+    background:var(--paper-raised); color:var(--ink); font-family:'Inter',sans-serif; font-size:0.88rem;
   }
-  .home-add-folder button{
-    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem;
-    padding:0 18px; border-radius:12px; cursor:pointer; box-shadow:3px 3px 0 var(--ink); white-space:nowrap;
-  }
-  .home-add-folder button:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
-  .folder-view{display:flex; align-items:flex-start;}
-  aside{width:250px; flex:0 0 auto; padding:20px 14px; position:sticky; top:0;}
-  main{flex:1; padding:22px 24px 60px; min-width:0;}
+
+  /* ---------- Folder view ---------- */
+  .folder-view{ display:flex; align-items:flex-start; }
+  aside{ width:230px; flex:0 0 auto; padding:24px 16px; position:sticky; top:0; }
+  main{ flex:1; padding:24px 28px 60px; min-width:0; }
 
   .back-btn{
     display:inline-flex; align-items:center; gap:6px; margin-bottom:16px;
-    border:3px solid var(--ink); background:var(--yellow); color:var(--ink);
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem;
-    padding:9px 16px; border-radius:12px; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+    border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.82rem;
+    padding:8px 14px; border-radius:8px; cursor:pointer; text-decoration:none;
   }
-  .back-btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
+  .back-btn:hover{ border-color:var(--accent); }
 
-  .folder-btn{
+  .folder-row{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    width:100%; text-align:left; padding:12px 14px; margin-bottom:10px;
-    border:3px solid var(--ink); border-radius:10px 10px 4px 4px;
-    background:var(--paper); cursor:pointer; font-family:'Baloo 2',sans-serif;
-    font-weight:700; font-size:0.95rem; color:var(--ink);
-    box-shadow:3px 3px 0 var(--ink); position:relative;
+    width:100%; text-align:left; padding:10px 12px; margin-bottom:6px;
+    border:1px solid transparent; border-radius:8px;
+    background:none; cursor:pointer; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:0.88rem; color:var(--ink); position:relative;
   }
-  .folder-btn::before{
-    content:""; position:absolute; top:-9px; left:14px; width:34px; height:10px;
-    background:inherit; border:3px solid var(--ink); border-bottom:none; border-radius:6px 6px 0 0;
+  .folder-row:hover{ background:var(--paper-raised); }
+  .folder-row.active{ background:var(--paper-raised); border-color:var(--line); }
+  .folder-row .count{
+    background:var(--paper); color:var(--muted); font-size:0.7rem; font-weight:600;
+    padding:2px 8px; border-radius:20px;
   }
-  .folder-btn.active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
-  .folder-btn .count{
-    background:var(--ink); color:#fff; font-size:0.72rem; font-weight:800;
-    padding:2px 8px; border-radius:20px; font-family:'Nunito',sans-serif;
-  }
+  .folder-row .name-wrap{ display:flex; align-items:center; }
 
-  .add-cat{display:flex; gap:6px; margin-top:16px;}
+  .add-cat{ display:flex; gap:6px; margin-top:14px; }
   .add-cat input{
-    flex:1; padding:9px 10px; border:2.5px solid var(--ink); border-radius:8px;
-    font-family:'Nunito',sans-serif; font-weight:600; font-size:0.85rem; min-width:0;
+    flex:1; padding:8px 9px; border:1px solid var(--line); border-radius:7px;
+    font-family:'Inter',sans-serif; font-size:0.82rem; background:var(--paper-raised); color:var(--ink); min-width:0;
   }
   .add-cat button{
-    border:2.5px solid var(--ink); background:var(--yellow); color:var(--ink);
-    border-radius:8px; font-weight:800; cursor:pointer; padding:0 12px; font-size:1rem;
+    border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);
+    border-radius:7px; font-weight:700; cursor:pointer; padding:0 12px; font-size:0.95rem;
   }
 
-  .storage-note{margin-top:18px; font-size:0.72rem; color:#6b6884; line-height:1.4; font-weight:600;}
-  .storage-note button{
-    display:block; margin-top:8px; width:100%; padding:8px; font-size:0.75rem;
-    border:2px solid var(--ink); border-radius:8px; background:#fff; cursor:pointer; font-weight:800;
-  }
+  .sidebar-foot{ margin-top:18px; font-size:0.74rem; color:var(--muted); line-height:1.5; }
+  .sidebar-foot a{ color:var(--accent-deep); cursor:pointer; }
 
-  .gallery-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
-  .gallery-head h2{margin:0; font-size:1.4rem;}
+  .gallery-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .gallery-head h2{ font-size:1.2rem; }
   .gallery-head .tag{
-    background:var(--yellow); color:var(--ink); padding:4px 12px; border-radius:20px;
-    font-size:0.75rem; font-weight:800; font-family:'Nunito',sans-serif; border:2px solid var(--ink);
+    background:var(--paper-raised); color:var(--muted); padding:3px 11px; border-radius:20px;
+    font-size:0.74rem; font-weight:600; border:1px solid var(--line);
   }
 
-  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:16px;}
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:14px; }
   .card{
-    border:3px solid var(--ink); border-radius:12px; overflow:hidden; background:#fff;
-    box-shadow:4px 4px 0 var(--ink); position:relative; cursor:pointer; display:flex; flex-direction:column;
+    border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    background:var(--paper-raised); position:relative; cursor:pointer;
+    display:flex; flex-direction:column; transition:border-color .12s;
   }
-  .card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#eee;}
-  .card .meta{padding:8px 10px 10px;}
-  .card .fname{font-size:0.75rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .card:hover{ border-color:var(--accent); }
+  .card img{ width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--paper); }
+  .card .meta{ padding:8px 9px 9px; }
+  .card .fname{ font-size:0.74rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .card select.moveSel{
-    width:100%; margin-top:6px; font-size:0.72rem; font-weight:700; padding:4px;
-    border:2px solid var(--ink); border-radius:6px; font-family:'Nunito',sans-serif; background:var(--cream);
+    width:100%; margin-top:5px; font-size:0.7rem; font-weight:600; padding:4px;
+    border:1px solid var(--line); border-radius:6px; font-family:'Inter',sans-serif;
+    background:var(--paper); color:var(--ink);
   }
   .card .del-btn{
-    position:absolute; top:6px; right:6px; background:var(--pink); color:#fff; border:2px solid var(--ink);
-    border-radius:50%; width:26px; height:26px; font-weight:800; cursor:pointer; line-height:1; padding:0;
-    display:flex; align-items:center; justify-content:center;
+    position:absolute; top:6px; right:6px; background:var(--paper-raised); color:var(--coral);
+    border:1px solid var(--line); border-radius:50%; width:24px; height:24px;
+    font-weight:700; cursor:pointer; line-height:1; padding:0; opacity:0;
+    display:flex; align-items:center; justify-content:center; transition:opacity .12s;
   }
+  .card:hover .del-btn{ opacity:1; }
 
   .empty-state{
-    border:3px dashed var(--ink); border-radius:16px; padding:50px 20px; text-align:center;
-    color:#6b6884; font-weight:700;
+    border:1px dashed var(--line); border-radius:var(--radius); padding:44px 20px;
+    text-align:center; color:var(--muted); font-weight:500;
   }
 
-  /* ---------- Image preview modal ---------- */
+  /* ---------- Generic modal shell (preview / confirm / rename / settings) ---------- */
   .modal-bg{
-    display:none; position:fixed; inset:0; background:rgba(26,26,46,0.75); z-index:50;
+    display:none; position:fixed; inset:0; background:rgba(20,22,31,0.5); z-index:80;
     align-items:center; justify-content:center; padding:24px;
   }
-  .modal-bg.open{display:flex;}
+  .modal-bg.open{ display:flex; }
   .modal{
-    background:#fff; border:4px solid var(--ink); border-radius:16px; max-width:800px; width:100%;
-    max-height:88vh; overflow:auto; box-shadow:8px 8px 0 var(--yellow);
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:16px;
+    max-width:640px; width:100%; max-height:86vh; overflow:auto;
+    box-shadow:0 20px 48px var(--shadow);
   }
-  .modal img{width:100%; display:block; max-height:60vh; object-fit:contain; background:#111;}
-  .modal-body{padding:18px 20px;}
-  .modal-body h3{margin:0 0 6px;}
-  .modal-body .row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;}
-  .modal-body select{
-    padding:8px 10px; border:2.5px solid var(--ink); border-radius:8px; font-weight:700; font-family:'Nunito',sans-serif;
+  .modal.narrow{ max-width:420px; }
+  .modal img.preview{ width:100%; display:block; max-height:52vh; object-fit:contain; background:var(--ink); }
+  .modal-body{ padding:22px 24px; }
+  .modal-body h3{ margin-bottom:6px; font-size:1.1rem; }
+  .modal-body .row{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+  .modal-body select, .modal-body input[type=text]{
+    padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-weight:500;
+    font-family:'Inter',sans-serif; background:var(--paper); color:var(--ink);
   }
-  .modal-body .close-x, .modal-body .del-x{
-    border:2.5px solid var(--ink); border-radius:8px; padding:8px 14px; font-weight:800; cursor:pointer; font-family:'Baloo 2',sans-serif;
-  }
-  .modal-body .close-x{background:var(--yellow);}
-  .modal-body .del-x{background:var(--pink); color:#fff;}
+  .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
 
-  /* ---------- Confirm modal ---------- */
-  .confirm-bg{
-    display:none; position:fixed; inset:0; background:rgba(26,26,46,0.75); z-index:70;
-    align-items:center; justify-content:center; padding:24px;
+  /* ---------- Settings modal ---------- */
+  #settingsModal .modal-body{ padding:0; }
+  .settings-layout{ display:flex; min-height:340px; }
+  .settings-tabs{ width:150px; flex:0 0 auto; border-right:1px solid var(--line); padding:18px 10px; }
+  .settings-tab-btn{
+    display:block; width:100%; text-align:left; padding:9px 12px; border-radius:8px;
+    border:none; background:none; cursor:pointer; font-weight:600; font-size:0.86rem;
+    color:var(--muted); margin-bottom:2px;
   }
-  .confirm-bg.open{display:flex;}
-  .confirm-box{
-    background:#fff; border:4px solid var(--ink); border-radius:16px; max-width:420px; width:100%;
-    padding:24px; box-shadow:8px 8px 0 var(--pink);
+  .settings-tab-btn.active{ background:var(--paper); color:var(--ink); }
+  .settings-pane{ flex:1; padding:22px 26px; }
+  .settings-pane h3{ font-size:1rem; margin-bottom:16px; }
+  .settings-block{ margin-bottom:22px; }
+  .settings-block label.label{
+    display:block; font-size:0.8rem; font-weight:600; color:var(--muted); margin-bottom:8px;
   }
-  .confirm-box p{margin:0 0 20px; font-weight:700; line-height:1.5;}
-  .confirm-actions{display:flex; gap:10px; justify-content:flex-end;}
-  .confirm-actions button{
-    border:2.5px solid var(--ink); border-radius:10px; padding:10px 18px; font-weight:800;
-    cursor:pointer; font-family:'Baloo 2',sans-serif; font-size:0.9rem;
+  .accent-swatches{ display:flex; gap:8px; }
+  .accent-swatch{
+    width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid transparent;
   }
-  .confirm-cancel{background:var(--yellow); color:var(--ink);}
-  .confirm-ok{background:var(--red); color:#fff;}
+  .accent-swatch.selected{ border-color:var(--ink); }
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+  .switch{ position:relative; width:42px; height:24px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; inset:0; background:var(--line); border-radius:24px; cursor:pointer; transition:.15s;
+  }
+  .slider::before{
+    content:""; position:absolute; width:18px; height:18px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:.15s;
+  }
+  .switch input:checked + .slider{ background:var(--accent); }
+  .switch input:checked + .slider::before{ transform:translateX(18px); }
+  .settings-info-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--line); font-size:0.86rem;
+  }
+  .settings-info-row:last-child{ border-bottom:none; }
+  .settings-info-row .k{ color:var(--muted); }
 
-  /* ---------- Toast ---------- */
   #toast{
     position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(120%);
-    background:var(--cream); color:var(--ink); padding:14px 22px; border-radius:12px; font-weight:800;
-    z-index:60; transition:transform .25s ease; box-shadow:3px 3px 0 var(--yellow);
-    border:3px solid var(--ink); max-width:90vw; text-align:center;
+    background:var(--ink); color:var(--paper); padding:12px 20px; border-radius:9px; font-weight:600; font-size:0.86rem;
+    z-index:90; transition:transform .25s ease; max-width:90vw; text-align:center;
   }
-  #toast.show{transform:translateX(-50%) translateY(0);}
-
-  #notifBell{
-    position:fixed; bottom:22px; right:22px; z-index:59;
-    width:44px; height:44px; border-radius:50%; border:3px solid var(--ink);
-    background:var(--yellow); font-size:1.1rem; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:3px 3px 0 var(--ink);
-  }
-  #notifBell:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
-  #notifPanel{
-    display:none; position:fixed; bottom:76px; right:22px; z-index:59;
-    width:280px; max-height:340px; background:#fff; border:3px solid var(--ink); border-radius:14px;
-    box-shadow:4px 4px 0 var(--ink); overflow:hidden; flex-direction:column;
-  }
-  #notifPanel.open{display:flex;}
-  #notifPanelHead{
-    padding:12px 14px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.95rem;
-    border-bottom:3px solid var(--ink); background:var(--cream);
-  }
-  #notifList{overflow-y:auto; padding:8px 10px;}
-  .notif-item{
-    padding:8px 6px; border-bottom:1px solid #eee; font-size:0.8rem; font-weight:600;
-  }
-  .notif-item:last-child{border-bottom:none;}
-  .notif-time{display:block; font-size:0.68rem; color:#9a97ab; font-weight:700; margin-top:2px;}
-  .notif-empty{padding:16px 6px; color:#9a97ab; font-weight:700; font-size:0.8rem; text-align:center;}
+  #toast.show{ transform:translateX(-50%) translateY(0); }
 
   @media(max-width:820px){
-    .folder-view{flex-direction:column;}
-    aside{width:100%; position:static; padding:14px 16px 0;}
-    main{padding:18px 16px 60px;}
+    .folder-view{ flex-direction:column; }
+    aside{ width:100%; position:static; padding:16px 20px 0; }
+    main{ padding:20px 20px 60px; }
+    .settings-layout{ flex-direction:column; }
+    .settings-tabs{ width:100%; border-right:none; border-bottom:1px solid var(--line); display:flex; gap:4px; }
   }
 </style>
 </head>
 <body>
 
-<!-- SIGN-IN GATE -->
-<div id="signInGate" style="position:fixed;inset:0;z-index:100;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:24px;">
-  <div class="blob" style="width:64px;height:64px;font-size:30px;">🌿</div>
-  <h1 style="margin:0;">Willow's Image Vault</h1>
-  <p style="font-weight:600;color:#55536b;margin:0;max-width:320px;">Sign in with Google to open your library, saved permanently in your Drive.</p>
-  <button class="upload-btn" id="googleSignInBtn">Sign in with Google</button>
-  <p id="authStatus" style="font-size:0.8rem;color:#6b6884;font-weight:700;min-height:1.2em;"></p>
+<!-- ============================================================
+     GATE: paywall placeholder → Google sign-in
+     Access.hasSubscription() currently always returns true.
+     When the real backend exists, swap that one function to a
+     real Whop membership check — nothing else here needs to change.
+============================================================ -->
+<div id="paywallGate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--paper); align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; padding:24px;">
+  <div class="brand-mark" style="width:52px;height:52px;font-size:1.4rem;">🗂️</div>
+  <h1 style="font-size:1.4rem;">Vault Organizer</h1>
+  <p style="color:var(--muted); max-width:320px; margin:0;">This tool requires an active subscription. (Placeholder — real Whop check goes here.)</p>
+  <button class="btn btn-accent" onclick="Access.grantForPrototype()">Simulate: Unlock Access</button>
+</div>
+
+<div id="signInGate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--paper); align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; padding:24px;">
+  <div class="brand-mark" style="width:52px;height:52px;font-size:1.4rem;">🗂️</div>
+  <h1 style="font-size:1.4rem;">Vault Organizer</h1>
+  <p style="color:var(--muted); max-width:320px; margin:0;">Sign in with Google to open your library, saved permanently in your Drive.</p>
+  <button class="btn btn-accent" id="googleSignInBtn">Sign in with Google</button>
+  <p id="authStatus" style="font-size:0.8rem;color:var(--muted);min-height:1.2em;"></p>
 </div>
 
 <div id="appRootWrap" style="display:none;">
 <header>
-  <div class="title-wrap">
-    <div class="blob">🌿</div>
+  <div class="brand">
+    <div class="brand-mark">🗂️</div>
     <div>
-      <h1>Willow's Image Vault</h1>
-      <p class="sub">Sort once. Find forever.</p>
+      <h1>Vault Organizer</h1>
+      <div class="sub">Sort once. Find forever.</div>
     </div>
   </div>
   <div class="search-wrap">
     <input type="text" id="searchInput" placeholder="Search filenames...">
-    <span class="search-scope" id="searchScope">in All</span>
   </div>
-  <button class="upload-btn" id="uploadBtn">＋ Upload Images</button>
-  <input type="file" id="fileInput" accept="image/*" multiple>
+  <div class="header-actions">
+    <button class="btn btn-accent" id="uploadBtn">＋ Upload</button>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
 </header>
 
 <div class="app-shell" id="appShell">
-
-  <!-- HOME DASHBOARD -->
   <div class="home-view" id="homeView">
     <h2 class="home-title">Choose a folder</h2>
     <div class="tile-grid" id="tileGrid"></div>
     <div class="home-add-folder">
       <input type="text" id="homeNewCatName" placeholder="New folder name">
-      <button id="homeAddCatBtn">＋ Add Folder</button>
+      <button class="btn btn-ghost" id="homeAddCatBtn">＋ Add Folder</button>
     </div>
   </div>
 
-  <!-- FOLDER (DRILL-IN) VIEW -->
   <div class="folder-view" id="folderView" style="display:none;">
     <aside>
       <div id="folderList"></div>
@@ -356,17 +366,14 @@
         <input type="text" id="newCatName" placeholder="New folder name">
         <button id="addCatBtn">＋</button>
       </div>
-      <div class="storage-note" id="storageNote">
-        Synced to your Google Drive.
-        <button id="signOutBtn">⎋ Sign out</button>
+      <div class="sidebar-foot" id="sidebarFoot">
+        Synced to your Google Drive.<br>
+        <a id="openInDriveBtn" target="_blank" rel="noopener">Open in Drive ↗</a>
       </div>
     </aside>
 
     <main>
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-        <button class="back-btn" id="backBtn" style="margin-bottom:0;">◀ Back to Folders</button>
-        <a class="back-btn" id="openInDriveBtn" href="#" target="_blank" rel="noopener" style="margin-bottom:0; text-decoration:none; background:var(--teal); color:#fff;">📂 Open in Drive</a>
-      </div>
+      <button class="back-btn" id="backBtn">← Back to Folders</button>
       <div class="gallery-head">
         <h2 id="galleryTitle">All Images</h2>
         <span class="tag" id="galleryCount">0 images</span>
@@ -380,61 +387,213 @@
 </div>
 </div>
 
-<!-- IMAGE PREVIEW MODAL -->
+<!-- Image preview modal -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <img id="modalImg" src="">
+    <img class="preview" id="modalImg" src="">
     <div class="modal-body">
       <div style="display:flex; align-items:center; gap:8px;">
         <h3 id="modalName" style="margin:0;"></h3>
-        <button id="modalRenameBtn" title="Rename file" style="border:2px solid var(--ink); background:#fff; border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:0.85rem; flex:0 0 auto;">✏</button>
+        <button class="icon-btn" id="modalRenameBtn" title="Rename file" style="width:28px;height:28px;font-size:0.8rem;">✏</button>
       </div>
-      <div style="font-size:0.8rem;color:#6b6884;font-weight:700;margin-top:4px;" id="modalDate"></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;" id="modalDate"></div>
       <div class="row">
-        <label style="font-weight:800;font-size:0.85rem;">Move to:</label>
+        <label style="font-weight:600;font-size:0.84rem;">Move to:</label>
         <select id="modalMoveSel"></select>
       </div>
-      <div class="row">
-        <button class="close-x" id="modalClose">Close</button>
-        <button class="del-x" id="modalDelete">Delete image</button>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalClose">Close</button>
+        <button class="btn" style="background:var(--coral);color:#fff;" id="modalDelete">Delete image</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CONFIRM MODAL -->
-<div class="confirm-bg" id="confirmBg">
-  <div class="confirm-box">
-    <p id="confirmMsg"></p>
-    <div class="confirm-actions">
-      <button class="confirm-cancel" id="confirmCancel">Nevermind</button>
-      <button class="confirm-ok" id="confirmOk">Delete</button>
+<!-- Confirm modal -->
+<div class="modal-bg" id="confirmBg">
+  <div class="modal narrow">
+    <div class="modal-body">
+      <p id="confirmMsg" style="line-height:1.5;"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="confirmCancel">Nevermind</button>
+        <button class="btn" style="background:var(--coral);color:#fff;" id="confirmOk">Delete</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- RENAME CATEGORY MODAL -->
-<div class="confirm-bg" id="renameBg">
-  <div class="confirm-box">
-    <p style="margin-bottom:10px;">Rename this folder:</p>
-    <input type="text" id="renameInput" style="width:100%;padding:10px 12px;border:2.5px solid var(--ink);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:18px;box-sizing:border-box;">
-    <div class="confirm-actions">
-      <button class="confirm-cancel" id="renameCancel">Cancel</button>
-      <button class="confirm-ok" id="renameOk" style="background:var(--teal);">Rename</button>
+<!-- Rename modal -->
+<div class="modal-bg" id="renameBg">
+  <div class="modal narrow">
+    <div class="modal-body">
+      <p style="margin-bottom:10px;">Rename this folder:</p>
+      <input type="text" id="renameInput" style="width:100%;padding:9px 11px;box-sizing:border-box;margin-bottom:16px;">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="renameCancel">Cancel</button>
+        <button class="btn" style="background:var(--teal);color:#fff;" id="renameOk">Rename</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SETTINGS MODAL
+     Account-wide settings. Currently backed by localStorage as
+     a stand-in for the real Supabase-backed settings record —
+     see Settings.get()/Settings.set() below. Swapping the storage
+     layer later means editing those two functions only.
+============================================================ -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="settings-layout">
+        <div class="settings-tabs">
+          <button class="settings-tab-btn active" data-pane="appearance">Appearance</button>
+          <button class="settings-tab-btn" data-pane="account">Account</button>
+        </div>
+
+        <div class="settings-pane" id="pane-appearance">
+          <h3>Appearance</h3>
+          <div class="settings-block">
+            <label class="label">Accent color</label>
+            <div class="accent-swatches" id="accentSwatches"></div>
+          </div>
+          <div class="settings-block">
+            <div class="toggle-row">
+              <label class="label" style="margin:0;">Dark mode</label>
+              <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <p style="font-size:0.78rem;color:var(--muted);">These preferences apply across every tool in your toolkit, not just this one.</p>
+        </div>
+
+        <div class="settings-pane" id="pane-account" style="display:none;">
+          <h3>Account</h3>
+          <div class="settings-info-row">
+            <span class="k">Google account</span>
+            <span id="settingsGoogleEmail">—</span>
+          </div>
+          <div class="settings-info-row">
+            <span class="k">Subscription</span>
+            <span id="settingsSubStatus">Vault Organizer (placeholder)</span>
+          </div>
+          <div class="row" style="margin-top:18px;">
+            <button class="btn btn-ghost" id="manageSubBtn">Manage subscription</button>
+            <button class="btn" style="background:var(--coral);color:#fff;" id="signOutBtn">Sign out</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
-<button id="notifBell" title="Recent notifications">🔔</button>
-<div id="notifPanel">
-  <div id="notifPanelHead">Recent Activity</div>
-  <div id="notifList"></div>
-</div>
 
 <script>
 (function(){
   "use strict";
+
+  /* ============================================================
+     ACCESS — paywall abstraction.
+     Right now: a stub that always grants access after one click,
+     purely so the prototype is click-through-able.
+     LATER: replace hasSubscription()'s internals with a real
+     fetch() to your Vercel backend, which checks Whop membership
+     for this specific tool. Nothing outside this object needs
+     to change when that happens.
+  ============================================================ */
+  const Access = {
+    _granted: false,
+    hasSubscription(){ return this._granted; },
+    grantForPrototype(){
+      this._granted = true;
+      document.getElementById("paywallGate").style.display = "none";
+      boot();
+    }
+  };
+  window.Access = Access; // exposed for the prototype's demo button only
+
+  /* ============================================================
+     SETTINGS — account-wide preferences abstraction.
+     Right now: backed by localStorage as a stand-in.
+     LATER: replace get()/set() internals with real reads/writes
+     to the shared Supabase user-settings record, keyed by the
+     signed-in user's ID, so the same accent/dark-mode choice is
+     shared across all three tools instead of living per-browser.
+  ============================================================ */
+  const Settings = {
+    _key: "vault_settings_prototype",
+    _defaults: { accent:"#E8A33D", accentDeep:"#C7841F", darkMode:false },
+    get(){
+      try{
+        const raw = localStorage.getItem(this._key);
+        return raw ? {...this._defaults, ...JSON.parse(raw)} : {...this._defaults};
+      }catch(e){ return {...this._defaults}; }
+    },
+    set(partial){
+      const current = this.get();
+      const next = {...current, ...partial};
+      try{ localStorage.setItem(this._key, JSON.stringify(next)); }catch(e){ /* ignore */ }
+      applySettings(next);
+    }
+  };
+
+  const ACCENT_OPTIONS = [
+    {name:"amber", accent:"#E8A33D", deep:"#C7841F"},
+    {name:"teal",  accent:"#2F9E8F", deep:"#227A6E"},
+    {name:"coral", accent:"#E2604F", deep:"#C1493A"},
+    {name:"indigo",accent:"#5C6BC0", deep:"#3F4E9E"},
+    {name:"sage",  accent:"#7C8D6E", deep:"#5F6F52"},
+  ];
+
+  function applySettings(s){
+    document.documentElement.classList.toggle("dark", !!s.darkMode);
+    document.documentElement.style.setProperty("--accent", s.accent);
+    document.documentElement.style.setProperty("--accent-deep", s.accentDeep);
+  }
+
+  function renderSettingsUI(){
+    const s = Settings.get();
+    const swatchWrap = document.getElementById("accentSwatches");
+    swatchWrap.innerHTML = ACCENT_OPTIONS.map(opt=>`
+      <button class="accent-swatch ${opt.accent===s.accent ? 'selected':''}"
+        style="background:${opt.accent};" data-accent="${opt.accent}" data-deep="${opt.deep}"></button>
+    `).join("");
+    swatchWrap.querySelectorAll(".accent-swatch").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        Settings.set({accent:btn.dataset.accent, accentDeep:btn.dataset.deep});
+        renderSettingsUI();
+      });
+    });
+    document.getElementById("darkModeToggle").checked = !!s.darkMode;
+  }
+
+  document.getElementById("darkModeToggle").addEventListener("change",(e)=>{
+    Settings.set({darkMode:e.target.checked});
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", ()=>{
+    renderSettingsUI();
+    document.getElementById("settingsGoogleEmail").textContent = googleEmail || "Not connected";
+    document.getElementById("settingsModal").classList.add("open");
+  });
+  document.querySelectorAll(".settings-tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".settings-tab-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("pane-appearance").style.display = (btn.dataset.pane==="appearance") ? "block":"none";
+      document.getElementById("pane-account").style.display = (btn.dataset.pane==="account") ? "block":"none";
+    });
+  });
+  document.getElementById("manageSubBtn").addEventListener("click", ()=>{
+    showToast("This would open your Whop billing portal.");
+  });
+  document.getElementById("settingsModal").addEventListener("click",(e)=>{
+    if(e.target.id==="settingsModal") document.getElementById("settingsModal").classList.remove("open");
+  });
 
   // ---------------- Google Drive config ----------------
   const CLIENT_ID = "61220014333-mc5ifndc0je8f4bnefebncg9g5v5bug3.apps.googleusercontent.com";
@@ -447,17 +606,31 @@
   const ARCHIVE_RETENTION_DAYS = 30;
   const DEFAULT_CATEGORY_NAME = "Unsorted";
 
+  /* ============================================================
+     AUTH — Google session abstraction.
+     Right now: short-lived in-memory token (resets on refresh —
+     this is the known limitation flagged already).
+     LATER: swap internals for the persistent-session flow —
+     sign in once through the backend, backend stores a refresh
+     token in Supabase, browser gets a lightweight cookie/session
+     instead. Everything below that calls Auth.getToken() keeps
+     working unchanged once that swap happens.
+  ============================================================ */
   let accessToken = null;
+  let googleEmail = null;
   let tokenClient = null;
-  let rootFolderId = null;
-  let archiveFolderId = null;
 
-  let currentCategory = "__ALL__";
-  let viewMode = "home"; // "home" | "folder"
-  let allImages = [];
-  let categories = []; // {name, color, driveId}
+  const Auth = {
+    getToken(){ return accessToken; },
+    isSignedIn(){ return !!accessToken; },
+    signOut(){
+      try{ if(accessToken && window.google) google.accounts.oauth2.revoke(accessToken, ()=>{}); }catch(e){}
+      accessToken = null; googleEmail = null;
+      location.reload();
+    }
+  };
+  document.getElementById("signOutBtn").addEventListener("click", Auth.signOut);
 
-  // ---------------- Auth ----------------
   function authHeaders(){ return {Authorization: "Bearer " + accessToken}; }
 
   function waitForGIS(){
@@ -492,10 +665,16 @@
     });
   }
 
-  // ---------------- Drive helpers ----------------
+  let rootFolderId = null;
+  let archiveFolderId = null;
+  let currentCategory = "__ALL__";
+  let viewMode = "home";
+  let allImages = [];
+  let categories = [];
+
+  // ---------------- Drive helpers (unchanged logic, proven to work) ----------------
   async function driveListAll(query, fields){
-    let files = [];
-    let pageToken = "";
+    let files = []; let pageToken = "";
     do{
       const params = new URLSearchParams({q:query, fields:`nextPageToken, files(${fields})`, pageSize:"1000"});
       if(pageToken) params.set("pageToken", pageToken);
@@ -507,44 +686,35 @@
     } while(pageToken);
     return files;
   }
-
   async function driveFindFolderByName(name, parentId){
     const safeName = name.replace(/'/g, "\\'");
     const q = `name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false and '${parentId}' in parents`;
     const files = await driveListAll(q, "id,name,appProperties");
     return files[0] || null;
   }
-
   async function driveCreateFolder(name, parentId, appProperties){
     const res = await fetch(`${DRIVE_API}/files?fields=id,name,appProperties`, {
-      method:"POST",
-      headers:{...authHeaders(), "Content-Type":"application/json"},
+      method:"POST", headers:{...authHeaders(), "Content-Type":"application/json"},
       body: JSON.stringify({name, mimeType:"application/vnd.google-apps.folder", parents:[parentId], appProperties: appProperties || {}})
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error.message || "Couldn't create folder");
     return data;
   }
-
   async function driveListChildFolders(parentId){
     return driveListAll(`'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`, "id,name,appProperties");
   }
-
   async function driveListFiles(parentId){
     return driveListAll(`'${parentId}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'`, "id,name,appProperties,createdTime");
   }
-
   async function driveUpdateFile(fileId, body){
     const res = await fetch(`${DRIVE_API}/files/${fileId}?fields=id,name,appProperties`, {
-      method:"PATCH",
-      headers:{...authHeaders(), "Content-Type":"application/json"},
-      body: JSON.stringify(body)
+      method:"PATCH", headers:{...authHeaders(), "Content-Type":"application/json"}, body: JSON.stringify(body)
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error.message || "Couldn't update file");
     return data;
   }
-
   async function driveMoveFile(fileId, addParentId, removeParentId){
     const res = await fetch(`${DRIVE_API}/files/${fileId}?addParents=${addParentId}&removeParents=${removeParentId}&fields=id,parents`, {
       method:"PATCH", headers:authHeaders()
@@ -553,12 +723,10 @@
     if(data.error) throw new Error(data.error.message || "Couldn't move file");
     return data;
   }
-
   async function driveDeleteFile(fileId){
     const res = await fetch(`${DRIVE_API}/files/${fileId}`, {method:"DELETE", headers:authHeaders()});
     if(!res.ok && res.status !== 404) throw new Error("Delete failed: " + res.status);
   }
-
   async function driveUploadFile(file, parentId, appProperties){
     const metadata = {name:file.name, parents:[parentId], appProperties};
     const boundary = "vault_boundary_" + Math.random().toString(36).slice(2);
@@ -566,20 +734,16 @@
     const bodyParts = [
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
       `--${boundary}\r\nContent-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
-      fileBuf,
-      `\r\n--${boundary}--`
+      fileBuf, `\r\n--${boundary}--`
     ];
     const body = new Blob(bodyParts);
     const res = await fetch(`${UPLOAD_API}/files?uploadType=multipart&fields=id,name,appProperties,createdTime`, {
-      method:"POST",
-      headers:{...authHeaders(), "Content-Type": `multipart/related; boundary=${boundary}`},
-      body
+      method:"POST", headers:{...authHeaders(), "Content-Type": `multipart/related; boundary=${boundary}`}, body
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error.message || "Upload failed");
     return data;
   }
-
   async function ensureRootFolder(){
     const existing = await driveFindFolderByName(ROOT_FOLDER_NAME, "root");
     if(existing) return existing.id;
@@ -593,27 +757,19 @@
     return created.id;
   }
 
-  // ---------------- Load library from Drive ----------------
   function fileToImageRecord(f, categoryName, parentId){
     const props = f.appProperties || {};
     return {
-      id: f.id, driveId: f.id, parentId,
-      hash: props.hash || "",
-      filename: f.name,
-      category: categoryName,
+      id:f.id, driveId:f.id, parentId, hash:props.hash || "", filename:f.name, category:categoryName,
       dateAdded: props.dateAdded ? Number(props.dateAdded) : (f.createdTime ? new Date(f.createdTime).getTime() : Date.now()),
-      archivedAt: props.archivedAt ? Number(props.archivedAt) : undefined,
-      dataURL: null
+      archivedAt: props.archivedAt ? Number(props.archivedAt) : undefined, dataURL:null
     };
   }
-
   async function loadCategoriesFromDrive(){
     const folders = await driveListChildFolders(rootFolderId);
-    categories = folders
-      .filter(f=>f.name !== ARCHIVE_FOLDER_NAME)
+    categories = folders.filter(f=>f.name !== ARCHIVE_FOLDER_NAME)
       .map(f=>({name:f.name, color:(f.appProperties && f.appProperties.color) || undefined, driveId:f.id}));
   }
-
   async function loadAllImages(){
     allImages = [];
     for(const cat of categories){
@@ -625,36 +781,26 @@
       for(const f of files) allImages.push(fileToImageRecord(f, ARCHIVE_CATEGORY, archiveFolderId));
     }
   }
-
   async function purgeExpiredArchive(){
     const cutoffMs = ARCHIVE_RETENTION_DAYS*24*60*60*1000;
     const now = Date.now();
     const expired = allImages.filter(i=>i.category===ARCHIVE_CATEGORY && i.archivedAt && (now - i.archivedAt > cutoffMs));
-    for(const img of expired){
-      try{ await driveDeleteFile(img.driveId); }catch(e){ /* skip, will retry next load */ }
-    }
+    for(const img of expired){ try{ await driveDeleteFile(img.driveId); }catch(e){} }
     const expiredIds = new Set(expired.map(i=>i.id));
     allImages = allImages.filter(i=>!expiredIds.has(i.id));
   }
-
   async function migrateLegacyDefaultFolder(){
     const hasUnsorted = categories.some(c=>c.name===DEFAULT_CATEGORY_NAME);
     const oldDefault = categories.find(c=>c.name==="Category 1");
     if(!hasUnsorted && oldDefault){
-      try{
-        await driveUpdateFile(oldDefault.driveId, {name:DEFAULT_CATEGORY_NAME});
-        oldDefault.name = DEFAULT_CATEGORY_NAME;
-      }catch(e){ /* leave as-is, will retry next load */ }
+      try{ await driveUpdateFile(oldDefault.driveId, {name:DEFAULT_CATEGORY_NAME}); oldDefault.name = DEFAULT_CATEGORY_NAME; }catch(e){}
     }
   }
-
   async function sweepStrayRootImages(unsortedFolderId){
     try{
       const strayFiles = await driveListFiles(rootFolderId);
-      for(const f of strayFiles){
-        try{ await driveMoveFile(f.id, unsortedFolderId, rootFolderId); }catch(e){ /* skip, retry next load */ }
-      }
-    }catch(e){ /* non-fatal, skip this pass */ }
+      for(const f of strayFiles){ try{ await driveMoveFile(f.id, unsortedFolderId, rootFolderId); }catch(e){} }
+    }catch(e){}
   }
 
   async function bootAfterAuth(){
@@ -673,26 +819,18 @@
       await loadAllImages();
       await purgeExpiredArchive();
       renderHome();
-    }catch(err){
-      showToast("Couldn't load your Drive library — please refresh and try again.");
-    }
+    }catch(err){ showToast("Couldn't load your Drive library — please refresh and try again."); }
   }
 
-  function visibleImages(){
-    return allImages.filter(i=>i.category !== ARCHIVE_CATEGORY);
-  }
+  function visibleImages(){ return allImages.filter(i=>i.category !== ARCHIVE_CATEGORY); }
 
-  // ---------------- Fuzzy search ----------------
   function levenshtein(a, b){
-    const m = a.length, n = b.length;
+    const m=a.length, n=b.length;
     const dp = Array.from({length:m+1}, ()=>new Array(n+1).fill(0));
-    for(let i=0;i<=m;i++) dp[i][0] = i;
-    for(let j=0;j<=n;j++) dp[0][j] = j;
-    for(let i=1;i<=m;i++){
-      for(let j=1;j<=n;j++){
-        dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
-      }
-    }
+    for(let i=0;i<=m;i++) dp[i][0]=i;
+    for(let j=0;j<=n;j++) dp[0][j]=j;
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
     return dp[m][n];
   }
   function fuzzyMatch(filename, query){
@@ -702,28 +840,24 @@
     const fWords = fname.split(/[^a-z0-9]+/).filter(Boolean);
     if(qWords.length===0) return false;
     return qWords.every(qw=>{
-      const threshold = qw.length <= 4 ? 1 : 2;
-      return fWords.some(fw => Math.abs(fw.length - qw.length) <= threshold + 1 && levenshtein(qw, fw) <= threshold);
+      const threshold = qw.length<=4 ? 1 : 2;
+      return fWords.some(fw=>Math.abs(fw.length-qw.length)<=threshold+1 && levenshtein(qw,fw)<=threshold);
     });
   }
-
-  // ---------------- Hashing ----------------
   async function hashFile(file){
     const buf = await file.arrayBuffer();
     const digest = await crypto.subtle.digest("SHA-256", buf);
     return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
   }
-  function guessCategory(filename){
+  function guessCategory(){
     return categories.some(c=>c.name===DEFAULT_CATEGORY_NAME) ? DEFAULT_CATEGORY_NAME : (categories[0] ? categories[0].name : DEFAULT_CATEGORY_NAME);
   }
 
-  // ---------------- Lazy image loading ----------------
   const imgObserver = new IntersectionObserver((entries)=>{
-    entries.forEach((entry)=>{
+    entries.forEach(entry=>{
       if(!entry.isIntersecting) return;
-      const el = entry.target;
-      imgObserver.unobserve(el);
-      loadImageInto(el, el.dataset.imgId);
+      imgObserver.unobserve(entry.target);
+      loadImageInto(entry.target, entry.target.dataset.imgId);
     });
   }, {rootMargin:"200px"});
 
@@ -735,42 +869,30 @@
       const res = await fetch(`${DRIVE_API}/files/${rec.driveId}?alt=media`, {headers:authHeaders()});
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      rec.dataURL = url;
-      el.src = url;
-    }catch(err){ /* leave placeholder background */ }
+      rec.dataURL = url; el.src = url;
+    }catch(err){}
   }
 
-  // ---------------- Upload flow ----------------
-  document.getElementById("uploadBtn").addEventListener("click", ()=>{
-    document.getElementById("fileInput").click();
-  });
+  document.getElementById("uploadBtn").addEventListener("click", ()=> document.getElementById("fileInput").click());
   document.getElementById("fileInput").addEventListener("change", async (e)=>{
     const files = Array.from(e.target.files);
-    if(files.length === 0) return;
+    if(files.length===0) return;
     showToast(`Sorting ${files.length} image${files.length>1?"s":""}...`);
-    let added = 0, dupes = 0, failed = 0;
+    let added=0, dupes=0, failed=0;
     const existingHashes = new Set(allImages.map(img=>img.hash));
-
     for(const file of files){
       if(!file.type.startsWith("image/")) continue;
       try{
         const hash = await hashFile(file);
         if(existingHashes.has(hash)){ dupes++; continue; }
-        const categoryName = guessCategory(file.name);
+        const categoryName = guessCategory();
         const cat = categories.find(c=>c.name===categoryName);
         const dateAdded = Date.now();
         const uploaded = await driveUploadFile(file, cat.driveId, {hash, dateAdded:String(dateAdded)});
         const localURL = URL.createObjectURL(file);
-        allImages.push({
-          id: uploaded.id, driveId: uploaded.id, parentId: cat.driveId,
-          hash, filename:file.name, category:categoryName, dateAdded,
-          archivedAt: undefined, dataURL: localURL
-        });
-        existingHashes.add(hash);
-        added++;
-      }catch(err){
-        failed++;
-      }
+        allImages.push({id:uploaded.id, driveId:uploaded.id, parentId:cat.driveId, hash, filename:file.name, category:categoryName, dateAdded, archivedAt:undefined, dataURL:localURL});
+        existingHashes.add(hash); added++;
+      }catch(err){ failed++; }
     }
     e.target.value = "";
     refreshCurrentView();
@@ -780,61 +902,44 @@
     showToast(msg + ".");
   });
 
-  // ---------------- View switching ----------------
-  function refreshCurrentView(){
-    if(viewMode === "home") renderHome();
-    else { renderFolders(); renderGallery(); }
-  }
-
+  function refreshCurrentView(){ if(viewMode==="home") renderHome(); else { renderFolders(); renderGallery(); } }
   function goHome(){
-    viewMode = "home";
-    document.getElementById("homeView").style.display = "block";
-    document.getElementById("folderView").style.display = "none";
-    document.getElementById("searchInput").value = "";
+    viewMode="home";
+    document.getElementById("homeView").style.display="block";
+    document.getElementById("folderView").style.display="none";
+    document.getElementById("searchInput").value="";
     renderHome();
   }
   function enterFolder(catName){
-    currentCategory = catName;
-    viewMode = "folder";
-    document.getElementById("homeView").style.display = "none";
-    document.getElementById("folderView").style.display = "flex";
-    renderFolders();
-    renderGallery();
+    currentCategory=catName; viewMode="folder";
+    document.getElementById("homeView").style.display="none";
+    document.getElementById("folderView").style.display="flex";
+    renderFolders(); renderGallery();
   }
   document.getElementById("backBtn").addEventListener("click", goHome);
 
-  // ---------------- Home rendering ----------------
-  const tileColors = ["#FFE9A8","#BFEAE4","#FFD1E3","#DCD1F2","#FFDCC2","#CBEFD6","#C9E4FF","#F3D9F5","#FFF3B0","#D4F0F0","#E8D5C4","#D6E8C4"];
   let openColorPopoverFor = null;
-
   function colorPopoverHTML(){
     return `<div class="color-popover">
       <button class="rename-opt">✏ Rename Folder</button>
-      <div class="swatch-grid">${tileColors.map(c=>`<button class="swatch" data-color="${c}" style="background:${c};"></button>`).join("")}</div>
+      <div class="swatch-grid">${ACCENT_SWATCH_OPTIONS.map(c=>`<button class="swatch" data-color="${c}" style="background:${c};"></button>`).join("")}</div>
     </div>`;
   }
-  function toggleColorPopover(catName){
-    openColorPopoverFor = (openColorPopoverFor === catName) ? null : catName;
-    refreshCurrentView();
-  }
+  const ACCENT_SWATCH_OPTIONS = ["#F4D9A0","#B9E1DB","#F2C9C9","#CFC7E8","#F5D6BE","#C3E6C9","#C2DDF2","#E7CDEA"];
+  function toggleColorPopover(catName){ openColorPopoverFor = (openColorPopoverFor===catName)?null:catName; refreshCurrentView(); }
   async function setCategoryColor(catName, color){
     const cat = categories.find(c=>c.name===catName);
     openColorPopoverFor = null;
     if(!cat){ refreshCurrentView(); return; }
     try{
       await driveUpdateFile(cat.driveId, {appProperties:{color}});
-      cat.color = color;
-      refreshCurrentView();
+      cat.color = color; refreshCurrentView();
       showToast(`Updated color for "${catName}".`);
-    }catch(err){
-      refreshCurrentView();
-      showToast("Couldn't save that color — try again.");
-    }
+    }catch(err){ refreshCurrentView(); showToast("Couldn't save that color — try again."); }
   }
-  document.addEventListener("click", (e)=>{
+  document.addEventListener("click",(e)=>{
     if(openColorPopoverFor && !e.target.closest(".color-popover") && !e.target.classList.contains("folder-gear")){
-      openColorPopoverFor = null;
-      refreshCurrentView();
+      openColorPopoverFor = null; refreshCurrentView();
     }
   });
 
@@ -849,31 +954,26 @@
   function renderHome(){
     const grid = document.getElementById("tileGrid");
     grid.innerHTML = "";
-
     const allTile = document.createElement("div");
     allTile.className = "tile all-tile";
-    allTile.setAttribute("role","button");
-    allTile.setAttribute("tabindex","0");
-    allTile.innerHTML = `<div class="tile-icon">🗂</div><div class="tile-name">All Images</div><div class="tile-count">${visibleImages().length}</div>`;
+    allTile.innerHTML = `<div class="tile-name">🗂 All Images</div><div class="tile-count">${visibleImages().length}</div>`;
     allTile.onclick = ()=>enterFolder("__ALL__");
     grid.appendChild(allTile);
 
-    sortedCategoriesForDisplay().forEach((cat, idx)=>{
+    sortedCategoriesForDisplay().forEach(cat=>{
       const count = visibleImages().filter(i=>i.category===cat.name).length;
       const isUnsorted = cat.name===DEFAULT_CATEGORY_NAME;
       const tile = document.createElement("div");
-      tile.className = "tile" + (isUnsorted ? " all-tile" : "");
-      tile.setAttribute("role","button");
-      tile.setAttribute("tabindex","0");
-      tile.style.background = isUnsorted ? "" : (cat.color || tileColors[idx % tileColors.length]);
+      tile.className = "tile";
       tile.innerHTML = `
         ${isUnsorted ? "" : `
-        <div class="folder-tools corner">
+        <div class="folder-tools">
           <button class="folder-gear" title="Folder color">⚙</button>
           <button class="folder-del-x" title="Delete folder">✕</button>
         </div>
         ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}`}
-        <div class="tile-icon">${isUnsorted ? "" : "📁"}</div><div class="tile-name">${cat.name}</div><div class="tile-count">${count}</div>`;
+        <div class="tile-name">${cat.color ? `<span class="tile-color-dot" style="background:${cat.color};"></span>`:""}${cat.name}</div>
+        <div class="tile-count">${count}</div>`;
       tile.onclick = (e)=>{
         if(e.target.classList.contains("rename-opt")){ e.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.name); return; }
         if(e.target.classList.contains("swatch")){ e.stopPropagation(); setCategoryColor(cat.name, e.target.dataset.color); return; }
@@ -886,38 +986,30 @@
     });
   }
 
-  // ---------------- Folder-view sidebar rendering ----------------
   function countFor(catName){ return visibleImages().filter(i=>i.category===catName).length; }
 
   function renderFolders(){
     const list = document.getElementById("folderList");
     list.innerHTML = "";
-
-    const allBtn = document.createElement("button");
-    allBtn.className = "folder-btn" + (currentCategory==="__ALL__" ? " active":"");
-    allBtn.style.background = "var(--yellow)";
-    allBtn.innerHTML = `<span>🗂 All Images</span><span class="count">${visibleImages().length}</span>`;
+    const allBtn = document.createElement("div");
+    allBtn.className = "folder-row" + (currentCategory==="__ALL__" ? " active":"");
+    allBtn.innerHTML = `<span class="name-wrap">🗂 All Images</span><span class="count">${visibleImages().length}</span>`;
     allBtn.onclick = ()=>{ currentCategory="__ALL__"; document.getElementById("searchInput").value=""; renderFolders(); renderGallery(); };
     list.appendChild(allBtn);
 
-    sortedCategoriesForDisplay().forEach((cat, idx)=>{
+    sortedCategoriesForDisplay().forEach(cat=>{
       const isUnsorted = cat.name===DEFAULT_CATEGORY_NAME;
-      const btn = document.createElement("div");
-      btn.className = "folder-btn" + (currentCategory===cat.name ? " active":"");
-      btn.setAttribute("role","button");
-      btn.setAttribute("tabindex","0");
-      btn.style.background = isUnsorted ? "var(--yellow)" : (cat.color || tileColors[idx % tileColors.length]);
-      btn.innerHTML = `<span>${cat.name}</span>
+      const row = document.createElement("div");
+      row.className = "folder-row" + (currentCategory===cat.name ? " active":"");
+      row.style.position = "relative";
+      row.innerHTML = `
+        <span class="name-wrap">${cat.color ? `<span class="tile-color-dot" style="background:${cat.color};"></span>`:""}${cat.name}</span>
         <span style="display:flex;align-items:center;gap:6px;">
           <span class="count">${countFor(cat.name)}</span>
-          ${isUnsorted ? "" : `
-          <div class="folder-tools">
-            <button class="folder-gear" title="Folder color">⚙</button>
-            <button class="folder-del-x" title="Delete folder">✕</button>
-          </div>`}
+          ${isUnsorted ? "" : `<div class="folder-tools"><button class="folder-gear" title="Folder color">⚙</button><button class="folder-del-x" title="Delete folder">✕</button></div>`}
         </span>
         ${(!isUnsorted && openColorPopoverFor===cat.name) ? colorPopoverHTML() : ""}`;
-      btn.onclick = (ev)=>{
+      row.onclick = (ev)=>{
         if(ev.target.classList.contains("rename-opt")){ ev.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.name); return; }
         if(ev.target.classList.contains("swatch")){ ev.stopPropagation(); setCategoryColor(cat.name, ev.target.dataset.color); return; }
         if(ev.target.classList.contains("folder-gear")){ ev.stopPropagation(); toggleColorPopover(cat.name); return; }
@@ -925,24 +1017,17 @@
         if(ev.target.closest(".color-popover")){ ev.stopPropagation(); return; }
         currentCategory = cat.name;
         document.getElementById("searchInput").value="";
-        renderFolders();
-        renderGallery();
+        renderFolders(); renderGallery();
       };
-      list.appendChild(btn);
+      list.appendChild(row);
     });
   }
 
   function confirmDeleteCategory(name){
-    if(name === DEFAULT_CATEGORY_NAME){
-      showToast("Unsorted can't be deleted — it's where new uploads land.");
-      return;
-    }
-    showConfirm(
-      `Delete "${name}"? All images inside will move to an archive for ${ARCHIVE_RETENTION_DAYS} days, then be permanently removed. You won't see them in your folders during that time.`,
-      async ()=>{ await deleteCategory(name); }
-    );
+    if(name === DEFAULT_CATEGORY_NAME){ showToast("Unsorted can't be deleted — it's where new uploads land."); return; }
+    showConfirm(`Delete "${name}"? All images inside will move to an archive for ${ARCHIVE_RETENTION_DAYS} days, then be permanently removed.`,
+      async ()=>{ await deleteCategory(name); });
   }
-
   async function deleteCategory(name){
     try{
       const cat = categories.find(c=>c.name===name);
@@ -951,9 +1036,7 @@
       for(const img of affected){
         await driveMoveFile(img.driveId, archiveFolderId, cat.driveId);
         await driveUpdateFile(img.driveId, {appProperties:{hash:img.hash, dateAdded:String(img.dateAdded), archivedAt:String(Date.now())}});
-        img.category = ARCHIVE_CATEGORY;
-        img.parentId = archiveFolderId;
-        img.archivedAt = Date.now();
+        img.category = ARCHIVE_CATEGORY; img.parentId = archiveFolderId; img.archivedAt = Date.now();
       }
       await driveDeleteFile(cat.driveId);
       categories = categories.filter(c=>c.name!==name);
@@ -964,19 +1047,14 @@
       if(currentCategory===name){ currentCategory="__ALL__"; }
       refreshCurrentView();
       showToast(`"${name}" deleted. Its images are archived for ${ARCHIVE_RETENTION_DAYS} days.`);
-    }catch(err){
-      showToast("Couldn't delete that folder — try again.");
-    }
+    }catch(err){ showToast("Couldn't delete that folder — try again."); }
   }
 
-  // ---------------- Rename (categories + individual image files) ----------------
-  let renameMode = "category"; // "category" | "image"
+  let renameMode = "category";
   let renameTargetCat = null;
   let renameTargetImageId = null;
-
   function openRenameModal(catName){
-    renameMode = "category";
-    renameTargetCat = catName;
+    renameMode="category"; renameTargetCat=catName;
     document.getElementById("renameInput").value = catName;
     document.getElementById("renameBg").classList.add("open");
     refreshCurrentView();
@@ -984,8 +1062,7 @@
   function openRenameImageModal(id){
     const img = allImages.find(i=>i.id===id);
     if(!img) return;
-    renameMode = "image";
-    renameTargetImageId = id;
+    renameMode="image"; renameTargetImageId=id;
     document.getElementById("renameInput").value = img.filename;
     document.getElementById("renameBg").classList.add("open");
   }
@@ -995,18 +1072,11 @@
     const newName = document.getElementById("renameInput").value.trim();
     document.getElementById("renameBg").classList.remove("open");
     if(!newName) return;
-    if(renameMode === "category"){
-      if(newName===renameTargetCat) return;
-      await renameCategory(renameTargetCat, newName);
-    } else {
-      await renameImageFile(renameTargetImageId, newName);
-    }
+    if(renameMode==="category"){ if(newName!==renameTargetCat) await renameCategory(renameTargetCat, newName); }
+    else{ await renameImageFile(renameTargetImageId, newName); }
   };
   async function renameCategory(oldName, newName){
-    if(categories.some(c=>c.name.toLowerCase()===newName.toLowerCase() && c.name!==oldName)){
-      showToast("That folder name already exists.");
-      return;
-    }
+    if(categories.some(c=>c.name.toLowerCase()===newName.toLowerCase() && c.name!==oldName)){ showToast("That folder name already exists."); return; }
     const cat = categories.find(c=>c.name===oldName);
     if(!cat) return;
     try{
@@ -1016,14 +1086,11 @@
       if(currentCategory===oldName) currentCategory=newName;
       refreshCurrentView();
       showToast(`Renamed to "${newName}".`);
-    }catch(err){
-      showToast("Couldn't rename that folder — try again.");
-    }
+    }catch(err){ showToast("Couldn't rename that folder — try again."); }
   }
   async function renameImageFile(id, newName){
     const img = allImages.find(i=>i.id===id);
-    if(!img) return;
-    if(newName === img.filename) return;
+    if(!img || newName===img.filename) return;
     try{
       await driveUpdateFile(img.driveId, {name:newName});
       img.filename = newName;
@@ -1032,98 +1099,69 @@
         document.getElementById("modalName").textContent = newName;
       }
       showToast("File renamed.");
-    }catch(err){
-      showToast("Couldn't rename that file — try again.");
-    }
+    }catch(err){ showToast("Couldn't rename that file — try again."); }
   }
 
-
-  // ---------------- Gallery rendering ----------------
   function renderGallery(){
     const grid = document.getElementById("grid");
     const empty = document.getElementById("emptyState");
     const title = document.getElementById("galleryTitle");
     const countTag = document.getElementById("galleryCount");
-    const searchScope = document.getElementById("searchScope");
     const driveLink = document.getElementById("openInDriveBtn");
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
 
     let pool;
-    if(currentCategory === "__ALL__"){
-      pool = visibleImages();
-      title.textContent = "All Images";
-      searchScope.textContent = "in All";
+    if(currentCategory==="__ALL__"){
+      pool = visibleImages(); title.textContent = "All Images";
       driveLink.href = `https://drive.google.com/drive/folders/${rootFolderId}`;
     } else {
-      pool = visibleImages().filter(i=>i.category===currentCategory);
-      title.textContent = currentCategory;
-      searchScope.textContent = `in ${currentCategory}`;
+      pool = visibleImages().filter(i=>i.category===currentCategory); title.textContent = currentCategory;
       const cat = categories.find(c=>c.name===currentCategory);
       driveLink.href = cat ? `https://drive.google.com/drive/folders/${cat.driveId}` : `https://drive.google.com/drive/folders/${rootFolderId}`;
     }
     if(query) pool = pool.filter(i=>fuzzyMatch(i.filename, query));
-    pool = pool.slice().sort((a,b)=>b.dateAdded - a.dateAdded);
-
+    pool = pool.slice().sort((a,b)=>b.dateAdded-a.dateAdded);
     countTag.textContent = `${pool.length} image${pool.length!==1?"s":""}`;
     grid.innerHTML = "";
-
-    if(pool.length===0){ empty.style.display = "block"; return; }
-    empty.style.display = "none";
+    if(pool.length===0){ empty.style.display="block"; return; }
+    empty.style.display="none";
 
     for(const img of pool){
       const card = document.createElement("div");
       card.className = "card";
-
       const imEl = document.createElement("img");
       imEl.loading = "lazy";
       imEl.onclick = ()=>openModal(img.id);
-      if(img.dataURL){
-        imEl.src = img.dataURL;
-      } else {
-        imEl.dataset.imgId = img.id;
-        imgObserver.observe(imEl);
-      }
+      if(img.dataURL){ imEl.src = img.dataURL; } else { imEl.dataset.imgId = img.id; imgObserver.observe(imEl); }
       card.appendChild(imEl);
 
       const delBtn = document.createElement("button");
-      delBtn.className = "del-btn";
-      delBtn.textContent = "✕";
-      delBtn.title = "Delete";
+      delBtn.className = "del-btn"; delBtn.textContent = "✕"; delBtn.title = "Delete";
       delBtn.onclick = (e)=>{ e.stopPropagation(); confirmDeleteImage(img.id); };
       card.appendChild(delBtn);
 
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      const fname = document.createElement("div");
-      fname.className = "fname";
-      fname.textContent = img.filename;
-      fname.title = img.filename;
+      const meta = document.createElement("div"); meta.className = "meta";
+      const fname = document.createElement("div"); fname.className = "fname"; fname.textContent = img.filename; fname.title = img.filename;
       meta.appendChild(fname);
 
-      const sel = document.createElement("select");
-      sel.className = "moveSel";
+      const sel = document.createElement("select"); sel.className = "moveSel";
       categories.forEach(cat=>{
         const opt = document.createElement("option");
-        opt.value = cat.name;
-        opt.textContent = "Move to: " + cat.name;
-        if(cat.name === img.category) opt.selected = true;
+        opt.value = cat.name; opt.textContent = "Move to: " + cat.name;
+        if(cat.name===img.category) opt.selected = true;
         sel.appendChild(opt);
       });
       sel.onclick = (e)=>e.stopPropagation();
       sel.onchange = async (e)=>{
         e.stopPropagation();
-        const newCatName = sel.value;
-        const newCat = categories.find(c=>c.name===newCatName);
+        const newCat = categories.find(c=>c.name===sel.value);
         if(!newCat) return;
         try{
           await driveMoveFile(img.driveId, newCat.driveId, img.parentId);
-          img.category = newCatName;
-          img.parentId = newCat.driveId;
+          img.category = newCat.name; img.parentId = newCat.driveId;
           refreshCurrentView();
-          showToast(`Moved to ${newCatName}`);
-        }catch(err){
-          showToast("Couldn't move that image — try again.");
-        }
+          showToast(`Moved to ${newCat.name}`);
+        }catch(err){ showToast("Couldn't move that image — try again."); }
       };
       meta.appendChild(sel);
       card.appendChild(meta);
@@ -1131,24 +1169,18 @@
     }
   }
 
-  function confirmDeleteImage(id){
-    showConfirm("Permanently delete this image? This can't be undone.", async ()=>{ await removeImage(id); });
-  }
+  function confirmDeleteImage(id){ showConfirm("Permanently delete this image? This can't be undone.", async ()=>{ await removeImage(id); }); }
   async function removeImage(id){
     const img = allImages.find(i=>i.id===id);
     if(!img) return;
     try{
       await driveDeleteFile(img.driveId);
       allImages = allImages.filter(i=>i.id!==id);
-      refreshCurrentView();
-      closeModal();
+      refreshCurrentView(); closeModal();
       showToast("Image deleted.");
-    }catch(err){
-      showToast("Couldn't delete that image — try again.");
-    }
+    }catch(err){ showToast("Couldn't delete that image — try again."); }
   }
 
-  // ---------------- Image preview modal ----------------
   let modalImgId = null;
   function openModal(id){
     const img = allImages.find(i=>i.id===id);
@@ -1157,10 +1189,8 @@
     document.getElementById("modalImg").src = img.dataURL || "";
     if(!img.dataURL){
       fetch(`${DRIVE_API}/files/${img.driveId}?alt=media`, {headers:authHeaders()})
-        .then(res=>res.blob())
-        .then(blob=>{
-          const url = URL.createObjectURL(blob);
-          img.dataURL = url;
+        .then(res=>res.blob()).then(blob=>{
+          const url = URL.createObjectURL(blob); img.dataURL = url;
           if(modalImgId===id) document.getElementById("modalImg").src = url;
         }).catch(()=>{});
     }
@@ -1170,17 +1200,13 @@
     sel.innerHTML = "";
     categories.forEach(cat=>{
       const opt = document.createElement("option");
-      opt.value = cat.name;
-      opt.textContent = cat.name;
+      opt.value = cat.name; opt.textContent = cat.name;
       if(cat.name===img.category) opt.selected = true;
       sel.appendChild(opt);
     });
     document.getElementById("modalBg").classList.add("open");
   }
-  function closeModal(){
-    document.getElementById("modalBg").classList.remove("open");
-    modalImgId = null;
-  }
+  function closeModal(){ document.getElementById("modalBg").classList.remove("open"); modalImgId=null; }
   document.getElementById("modalClose").onclick = closeModal;
   document.getElementById("modalBg").addEventListener("click",(e)=>{ if(e.target.id==="modalBg") closeModal(); });
   document.getElementById("modalMoveSel").addEventListener("change", async (e)=>{
@@ -1190,135 +1216,84 @@
     if(!newCat) return;
     try{
       await driveMoveFile(img.driveId, newCat.driveId, img.parentId);
-      img.category = newCat.name;
-      img.parentId = newCat.driveId;
+      img.category = newCat.name; img.parentId = newCat.driveId;
       refreshCurrentView();
       showToast(`Moved to ${img.category}`);
-    }catch(err){
-      showToast("Couldn't move that image — try again.");
-    }
+    }catch(err){ showToast("Couldn't move that image — try again."); }
   });
-  document.getElementById("modalRenameBtn").addEventListener("click", ()=>{
-    if(modalImgId!==null) openRenameImageModal(modalImgId);
-  });
-  document.getElementById("modalDelete").addEventListener("click", ()=>{
-    if(modalImgId!==null) confirmDeleteImage(modalImgId);
-  });
+  document.getElementById("modalRenameBtn").addEventListener("click", ()=>{ if(modalImgId!==null) openRenameImageModal(modalImgId); });
+  document.getElementById("modalDelete").addEventListener("click", ()=>{ if(modalImgId!==null) confirmDeleteImage(modalImgId); });
 
-  // ---------------- Confirm modal (generic) ----------------
   let pendingConfirmAction = null;
   function showConfirm(message, onConfirm){
     document.getElementById("confirmMsg").textContent = message;
     pendingConfirmAction = onConfirm;
     document.getElementById("confirmBg").classList.add("open");
   }
-  function hideConfirm(){
-    document.getElementById("confirmBg").classList.remove("open");
-    pendingConfirmAction = null;
-  }
+  function hideConfirm(){ document.getElementById("confirmBg").classList.remove("open"); pendingConfirmAction = null; }
   document.getElementById("confirmCancel").onclick = hideConfirm;
-  document.getElementById("confirmOk").onclick = async ()=>{
-    const action = pendingConfirmAction;
-    hideConfirm();
-    if(action) await action();
-  };
+  document.getElementById("confirmOk").onclick = async ()=>{ const action = pendingConfirmAction; hideConfirm(); if(action) await action(); };
   document.getElementById("confirmBg").addEventListener("click",(e)=>{ if(e.target.id==="confirmBg") hideConfirm(); });
 
-  // ---------------- Search ----------------
   document.getElementById("searchInput").addEventListener("input", ()=>{
     const val = document.getElementById("searchInput").value.trim();
-    if(viewMode === "home" && val !== ""){
-      enterFolder("__ALL__");
-    } else if(viewMode === "folder"){
-      renderGallery();
-    }
+    if(viewMode==="home" && val!=="") enterFolder("__ALL__");
+    else if(viewMode==="folder") renderGallery();
   });
 
-  // ---------------- Add category ----------------
   document.getElementById("homeAddCatBtn").addEventListener("click", ()=>{
     addCategory(document.getElementById("homeNewCatName").value.trim());
     document.getElementById("homeNewCatName").value = "";
   });
   document.getElementById("homeNewCatName").addEventListener("keydown",(e)=>{
-    if(e.key==="Enter"){
-      addCategory(document.getElementById("homeNewCatName").value.trim());
-      document.getElementById("homeNewCatName").value = "";
-    }
+    if(e.key==="Enter"){ addCategory(document.getElementById("homeNewCatName").value.trim()); document.getElementById("homeNewCatName").value=""; }
   });
   document.getElementById("addCatBtn").addEventListener("click", ()=>{
     addCategory(document.getElementById("newCatName").value.trim());
     document.getElementById("newCatName").value = "";
   });
   document.getElementById("newCatName").addEventListener("keydown",(e)=>{
-    if(e.key==="Enter"){
-      addCategory(document.getElementById("newCatName").value.trim());
-      document.getElementById("newCatName").value = "";
-    }
+    if(e.key==="Enter"){ addCategory(document.getElementById("newCatName").value.trim()); document.getElementById("newCatName").value=""; }
   });
   async function addCategory(name){
     if(!name) return;
     try{
-      if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase())){
-        showToast("That folder already exists.");
-        return;
-      }
+      if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase())){ showToast("That folder already exists."); return; }
       const created = await driveCreateFolder(name, rootFolderId, {});
       categories.push({name, color:undefined, driveId:created.id});
       refreshCurrentView();
       showToast(`Folder "${name}" created.`);
-    }catch(err){
-      showToast("Couldn't create that folder — try again.");
-    }
+    }catch(err){ showToast("Couldn't create that folder — try again."); }
   }
 
-  // ---------------- Sign out ----------------
-  document.getElementById("signOutBtn").addEventListener("click", ()=>{
-    try{ if(accessToken && window.google) google.accounts.oauth2.revoke(accessToken, ()=>{}); }catch(e){}
-    accessToken = null;
-    location.reload();
-  });
-
-  // ---------------- Toast ----------------
   let toastTimer;
-  let notificationHistory = [];
   function showToast(msg){
     const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
+    t.textContent = msg; t.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(()=>t.classList.remove("show"), 3200);
-
-    notificationHistory.unshift({msg, time:Date.now()});
-    if(notificationHistory.length > 30) notificationHistory.pop();
-    renderNotifPanel();
   }
-  function renderNotifPanel(){
-    const list = document.getElementById("notifList");
-    if(notificationHistory.length === 0){
-      list.innerHTML = `<div class="notif-empty">Nothing yet — activity will show up here.</div>`;
+
+  window.addEventListener("error", ()=> showToast("Something went wrong — please try that again."));
+  window.addEventListener("unhandledrejection", ()=> showToast("Something went wrong — please try that again."));
+
+  /* ============================================================
+     BOOT SEQUENCE — this is the part that changes shape later.
+     Right now: Access gate (stub) → Google sign-in gate → app.
+     LATER: Access.hasSubscription() does a real check, and if the
+     backend already has a valid session, the Google sign-in gate
+     can be skipped entirely (silent restore) instead of shown.
+  ============================================================ */
+  function boot(){
+    applySettings(Settings.get());
+    if(!Access.hasSubscription()){
+      document.getElementById("paywallGate").style.display = "flex";
       return;
     }
-    list.innerHTML = notificationHistory.map(n=>
-      `<div class="notif-item">${n.msg}<span class="notif-time">${new Date(n.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`
-    ).join("");
+    document.getElementById("signInGate").style.display = "flex";
+    startAuth();
   }
-  document.getElementById("notifBell").addEventListener("click", ()=>{
-    const panel = document.getElementById("notifPanel");
-    panel.classList.toggle("open");
-    if(panel.classList.contains("open")) renderNotifPanel();
-  });
-  document.addEventListener("click",(e)=>{
-    const panel = document.getElementById("notifPanel");
-    const bell = document.getElementById("notifBell");
-    if(panel.classList.contains("open") && !panel.contains(e.target) && e.target!==bell){
-      panel.classList.remove("open");
-    }
-  });
-
-  window.addEventListener("error", ()=>{ showToast("Something went wrong — please try that again."); });
-  window.addEventListener("unhandledrejection", ()=>{ showToast("Something went wrong — please try that again."); });
-
-  startAuth();
+  boot();
 })();
 </script>
 </body>
