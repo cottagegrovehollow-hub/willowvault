@@ -963,8 +963,10 @@
     sortedCategoriesForDisplay().forEach(cat=>{
       const count = visibleImages().filter(i=>i.category===cat.name).length;
       const isUnsorted = cat.name===DEFAULT_CATEGORY_NAME;
+      const showColor = !isUnsorted && !!cat.color;
       const tile = document.createElement("div");
       tile.className = "tile";
+      if(showColor) tile.style.borderTop = `4px solid ${cat.color}`;
       tile.innerHTML = `
         ${isUnsorted ? "" : `
         <div class="folder-tools">
@@ -972,7 +974,7 @@
           <button class="folder-del-x" title="Delete folder">✕</button>
         </div>
         ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}`}
-        <div class="tile-name">${cat.color ? `<span class="tile-color-dot" style="background:${cat.color};"></span>`:""}${cat.name}</div>
+        <div class="tile-name">${cat.name}</div>
         <div class="tile-count">${count}</div>`;
       tile.onclick = (e)=>{
         if(e.target.classList.contains("rename-opt")){ e.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.name); return; }
@@ -999,11 +1001,13 @@
 
     sortedCategoriesForDisplay().forEach(cat=>{
       const isUnsorted = cat.name===DEFAULT_CATEGORY_NAME;
+      const showColor = !isUnsorted && !!cat.color;
       const row = document.createElement("div");
       row.className = "folder-row" + (currentCategory===cat.name ? " active":"");
       row.style.position = "relative";
+      if(showColor) row.style.borderLeft = `4px solid ${cat.color}`;
       row.innerHTML = `
-        <span class="name-wrap">${cat.color ? `<span class="tile-color-dot" style="background:${cat.color};"></span>`:""}${cat.name}</span>
+        <span class="name-wrap">${cat.name}</span>
         <span style="display:flex;align-items:center;gap:6px;">
           <span class="count">${countFor(cat.name)}</span>
           ${isUnsorted ? "" : `<div class="folder-tools"><button class="folder-gear" title="Folder color">⚙</button><button class="folder-del-x" title="Delete folder">✕</button></div>`}
