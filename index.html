@@ -50,14 +50,10 @@
 
   /* ---------- Header ---------- */
   header{
-    padding:0;
-    border-bottom:1px solid var(--line);
-    background:var(--paper-raised);
-  }
-  .header-inner{
-    max-width:1300px; margin:0 auto;
     display:flex; align-items:center; gap:16px; flex-wrap:wrap;
     padding:18px 28px;
+    border-bottom:1px solid var(--line);
+    background:var(--paper-raised);
   }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand-mark{
@@ -138,7 +134,7 @@
   .app-shell{ max-width:1300px; margin:0 auto; }
 
   /* ---------- Home dashboard ---------- */
-  .home-view{ padding:32px 28px 60px; }
+  .home-view{ padding:32px 28px 60px 68px; }
   .home-title{ font-size:1.3rem; margin-bottom:18px; }
   .tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:14px; }
   .tile{
@@ -392,7 +388,6 @@
 
 <div id="appRootWrap" style="display:none;">
 <header>
-  <div class="header-inner">
   <div class="brand">
     <div class="brand-mark">🗂️</div>
     <div>
@@ -416,7 +411,6 @@
       🔔<span id="notifDot" style="display:none; position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--coral);"></span>
     </button>
     <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
-  </div>
   </div>
 </header>
 
