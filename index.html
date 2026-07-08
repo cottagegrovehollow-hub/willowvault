@@ -50,10 +50,14 @@
 
   /* ---------- Header ---------- */
   header{
-    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-    padding:18px 28px;
+    padding:0;
     border-bottom:1px solid var(--line);
     background:var(--paper-raised);
+  }
+  .header-inner{
+    max-width:1300px; margin:0 auto;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:18px 28px;
   }
   .brand{ display:flex; align-items:center; gap:10px; }
   .brand-mark{
@@ -388,6 +392,7 @@
 
 <div id="appRootWrap" style="display:none;">
 <header>
+  <div class="header-inner">
   <div class="brand">
     <div class="brand-mark">🗂️</div>
     <div>
@@ -411,6 +416,7 @@
       🔔<span id="notifDot" style="display:none; position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--coral);"></span>
     </button>
     <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
   </div>
 </header>
 
