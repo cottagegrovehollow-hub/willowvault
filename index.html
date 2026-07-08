@@ -365,8 +365,8 @@
 <div id="paywallGate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--paper); align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; padding:24px;">
   <div class="brand-mark" style="width:52px;height:52px;font-size:1.4rem;">🗂️</div>
   <h1 style="font-size:1.4rem;">Image Vault and Organizer</h1>
-  <p style="color:var(--muted); max-width:320px; margin:0;">This tool requires an active subscription. (Placeholder — real Whop check goes here.)</p>
-  <button class="btn btn-accent" onclick="Access.grantForPrototype()">Simulate: Unlock Access</button>
+  <p style="color:var(--muted); max-width:340px; margin:0;">No active session found for this tool. (Placeholder — once the hub exists, this will redirect there automatically instead of showing this screen.)</p>
+  <button class="btn btn-accent" onclick="Access.grantForPrototype()">Simulate: Valid Session Found</button>
 </div>
 
 <div id="signInGate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--paper); align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; padding:24px;">
@@ -379,6 +379,7 @@
 
 <div id="appRootWrap" style="display:none;">
 <header>
+  <a href="#" id="hubLink" class="back-btn" style="margin-bottom:0;" title="Back to My Tools">← My Tools</a>
   <div class="brand">
     <div class="brand-mark">🗂️</div>
     <div>
@@ -565,13 +566,17 @@
   "use strict";
 
   /* ============================================================
-     ACCESS — paywall abstraction.
-     Right now: a stub that always grants access after one click,
-     purely so the prototype is click-through-able.
-     LATER: replace hasSubscription()'s internals with a real
-     fetch() to your Vercel backend, which checks Whop membership
-     for this specific tool. Nothing outside this object needs
-     to change when that happens.
+     ACCESS — session-check abstraction, NOT a standalone paywall.
+     The real gate lives at the HUB level: the hub checks Whop
+     membership and only lets someone navigate here if they own
+     this tool. This function's real job later is just "is there
+     a valid hub-issued session attached to this visit" — a quick
+     check, not a purchase flow. If that check fails (e.g. someone
+     bookmarked this tool's URL directly, bypassing the hub), the
+     correct behavior is to redirect back to the hub's paywall for
+     THIS tool — not show a separate local "buy" screen here.
+     Right now: a stub that always denies until the demo button is
+     clicked, purely so this file is click-through-able on its own.
   ============================================================ */
   const Access = {
     _granted: false,
@@ -593,7 +598,7 @@
      shared across all three tools instead of living per-browser.
   ============================================================ */
   const Settings = {
-    _key: "vault_settings_prototype",
+    _key: "creator_toolkit_settings", // SHARED across all 3 tools — do not make this tool-specific
     _defaults: { accent:"#E8A33D", accentDeep:"#C7841F", darkMode:false },
     get(){
       try{
@@ -675,6 +680,11 @@
      clear() internals only, same pattern as Settings above.
   ============================================================ */
   const TOOL_ID = "vault"; // unique per tool — "prompt", "vault", "analyzer"
+  const HUB_URL = "#"; // PLACEHOLDER — replace with the real My Tools dashboard URL once the hub exists
+  document.getElementById("hubLink").href = HUB_URL;
+  document.getElementById("hubLink").addEventListener("click", (e)=>{
+    if(HUB_URL === "#"){ e.preventDefault(); showToast("This will link to My Tools once the hub is live."); }
+  });
   const TOOL_DISPLAY_NAMES = {
     prompt: "Prompt Builder",
     vault: "Image Vault and Organizer",
