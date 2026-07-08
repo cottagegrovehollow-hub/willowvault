@@ -18,7 +18,8 @@
     --ink:#1A1A2E;
     --paper:#FFFFFF;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; cursor:default;}
+  input[type="text"], textarea{cursor:text;}
   html,body{margin:0;padding:0;}
   body{
     background:var(--cream);
@@ -55,7 +56,7 @@
     border:3px solid var(--ink); border-radius:14px; font-family:'Nunito',sans-serif;
     font-weight:700; background:var(--cream); outline:none;
   }
-  #searchInput:focus{box-shadow:4px 4px 0 var(--purple);}
+  #searchInput:focus{box-shadow:4px 4px 0 var(--yellow);}
   .search-scope{
     position:absolute; right:10px; top:50%; transform:translateY(-50%);
     font-size:0.7rem; font-weight:800; color:var(--yellow); background:#fff;
@@ -406,7 +407,7 @@
   const ARCHIVE_FOLDER_NAME = "_Archived";
   const ARCHIVE_CATEGORY = "__ARCHIVED__";
   const ARCHIVE_RETENTION_DAYS = 30;
-  const DEFAULT_CATEGORY_NAME = "Category 1";
+  const DEFAULT_CATEGORY_NAME = "Unsorted";
 
   let accessToken = null;
   let tokenClient = null;
@@ -522,11 +523,19 @@
 
   async function driveUploadFile(file, parentId, appProperties){
     const metadata = {name:file.name, parents:[parentId], appProperties};
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], {type:"application/json"}));
-    form.append("file", file);
+    const boundary = "vault_boundary_" + Math.random().toString(36).slice(2);
+    const fileBuf = await file.arrayBuffer();
+    const bodyParts = [
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
+      `--${boundary}\r\nContent-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
+      fileBuf,
+      `\r\n--${boundary}--`
+    ];
+    const body = new Blob(bodyParts);
     const res = await fetch(`${UPLOAD_API}/files?uploadType=multipart&fields=id,name,appProperties,createdTime`, {
-      method:"POST", headers:authHeaders(), body:form
+      method:"POST",
+      headers:{...authHeaders(), "Content-Type": `multipart/related; boundary=${boundary}`},
+      body
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error.message || "Upload failed");
@@ -590,16 +599,39 @@
     allImages = allImages.filter(i=>!expiredIds.has(i.id));
   }
 
+  async function migrateLegacyDefaultFolder(){
+    const hasUnsorted = categories.some(c=>c.name===DEFAULT_CATEGORY_NAME);
+    const oldDefault = categories.find(c=>c.name==="Category 1");
+    if(!hasUnsorted && oldDefault){
+      try{
+        await driveUpdateFile(oldDefault.driveId, {name:DEFAULT_CATEGORY_NAME});
+        oldDefault.name = DEFAULT_CATEGORY_NAME;
+      }catch(e){ /* leave as-is, will retry next load */ }
+    }
+  }
+
+  async function sweepStrayRootImages(unsortedFolderId){
+    try{
+      const strayFiles = await driveListFiles(rootFolderId);
+      for(const f of strayFiles){
+        try{ await driveMoveFile(f.id, unsortedFolderId, rootFolderId); }catch(e){ /* skip, retry next load */ }
+      }
+    }catch(e){ /* non-fatal, skip this pass */ }
+  }
+
   async function bootAfterAuth(){
     try{
       document.getElementById("authStatus").textContent = "";
       rootFolderId = await ensureRootFolder();
       archiveFolderId = await ensureArchiveFolder();
       await loadCategoriesFromDrive();
-      if(categories.length === 0){
+      await migrateLegacyDefaultFolder();
+      if(!categories.some(c=>c.name===DEFAULT_CATEGORY_NAME)){
         const created = await driveCreateFolder(DEFAULT_CATEGORY_NAME, rootFolderId, {});
         categories.push({name:DEFAULT_CATEGORY_NAME, driveId:created.id});
       }
+      const unsortedCat = categories.find(c=>c.name===DEFAULT_CATEGORY_NAME);
+      await sweepStrayRootImages(unsortedCat.driveId);
       await loadAllImages();
       await purgeExpiredArchive();
       renderHome();
@@ -619,12 +651,6 @@
     return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
   }
   function guessCategory(filename){
-    const lower = filename.toLowerCase();
-    for(const cat of categories){
-      const nameLower = cat.name.toLowerCase();
-      if(nameLower === "category 1") continue;
-      if(lower.includes(nameLower)) return cat.name;
-    }
     return categories.some(c=>c.name===DEFAULT_CATEGORY_NAME) ? DEFAULT_CATEGORY_NAME : (categories[0] ? categories[0].name : DEFAULT_CATEGORY_NAME);
   }
 
@@ -771,7 +797,7 @@
       tile.innerHTML = `
         <div class="folder-tools corner">
           <button class="folder-gear" title="Folder color">⚙</button>
-          <button class="folder-del-x" title="Delete folder">✕</button>
+          ${cat.name===DEFAULT_CATEGORY_NAME ? "" : `<button class="folder-del-x" title="Delete folder">✕</button>`}
         </div>
         ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}
         <div class="tile-icon">📁</div><div class="tile-name">${cat.name}</div><div class="tile-count">${count}</div>`;
@@ -812,7 +838,7 @@
           <span class="count">${countFor(cat.name)}</span>
           <div class="folder-tools">
             <button class="folder-gear" title="Folder color">⚙</button>
-            <button class="folder-del-x" title="Delete folder">✕</button>
+            ${cat.name===DEFAULT_CATEGORY_NAME ? "" : `<button class="folder-del-x" title="Delete folder">✕</button>`}
           </div>
         </span>
         ${openColorPopoverFor===cat.name ? colorPopoverHTML() : ""}`;
@@ -832,6 +858,10 @@
   }
 
   function confirmDeleteCategory(name){
+    if(name === DEFAULT_CATEGORY_NAME){
+      showToast("Unsorted can't be deleted — it's where new uploads land.");
+      return;
+    }
     showConfirm(
       `Delete "${name}"? All images inside will move to an archive for ${ARCHIVE_RETENTION_DAYS} days, then be permanently removed. You won't see them in your folders during that time.`,
       async ()=>{ await deleteCategory(name); }
