@@ -36,7 +36,8 @@
     --muted:#8D8AA0;
     --shadow:rgba(0,0,0,0.35);
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; cursor:default; user-select:none; -webkit-user-select:none;}
+  input[type="text"], textarea{ cursor:text; user-select:text; -webkit-user-select:text; }
   body{
     margin:0;
     background:var(--paper);
@@ -208,9 +209,10 @@
     font-family:'Inter',sans-serif; font-size:0.82rem; background:var(--paper-raised); color:var(--ink); min-width:0;
   }
   .add-cat button{
-    border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);
+    border:1px solid var(--accent); background:var(--accent); color:var(--ink);
     border-radius:7px; font-weight:700; cursor:pointer; padding:0 12px; font-size:0.95rem;
   }
+  .add-cat button:hover{ background:var(--accent-deep); }
 
   .sidebar-foot{ margin-top:18px; font-size:0.74rem; color:var(--muted); line-height:1.5; }
   .sidebar-foot a{ color:var(--accent-deep); cursor:pointer; }
@@ -387,7 +389,7 @@
     <div class="tile-grid" id="tileGrid"></div>
     <div class="home-add-folder">
       <input type="text" id="homeNewCatName" placeholder="New folder name">
-      <button class="btn btn-ghost" id="homeAddCatBtn">＋ Add Folder</button>
+      <button class="btn btn-accent" id="homeAddCatBtn">＋ Add Folder</button>
     </div>
   </div>
 
@@ -1061,7 +1063,7 @@
       const isUnsorted = cat.name===DEFAULT_CATEGORY_NAME;
       const showColor = !isUnsorted && !!cat.color;
       const tile = document.createElement("div");
-      tile.className = "tile";
+      tile.className = "tile" + (isUnsorted ? " all-tile" : "");
       if(showColor) tile.style.borderTop = `4px solid ${cat.color}`;
       tile.innerHTML = `
         ${isUnsorted ? "" : `
