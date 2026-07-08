@@ -102,8 +102,14 @@
   }
   #notifPanel.open{ display:flex; }
   #notifPanelHead{
-    padding:12px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.9rem;
-    border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;
+    padding:12px 16px; border-bottom:1px solid var(--line);
+  }
+  #notifPanelHead .head-row{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.9rem;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  #notifPanelHead .scope-note{
+    font-family:'Inter',sans-serif; font-weight:500; font-size:0.72rem; color:var(--muted); margin-top:3px;
   }
   #notifPanelHead .clear-link{
     font-family:'Inter',sans-serif; font-weight:600; font-size:0.72rem; color:var(--muted); cursor:pointer;
@@ -395,8 +401,11 @@
 
 <div id="notifPanel">
   <div id="notifPanelHead">
-    <span>Recent Activity</span>
-    <span class="clear-link" id="notifClearBtn">Clear</span>
+    <div class="head-row">
+      <span>Recent Activity</span>
+      <span class="clear-link" id="notifClearBtn">Clear</span>
+    </div>
+    <div class="scope-note" id="notifScopeNote">You're viewing notifications for the Vault Organizer tool</div>
   </div>
   <div id="notifList"></div>
 </div>
@@ -666,6 +675,13 @@
      clear() internals only, same pattern as Settings above.
   ============================================================ */
   const TOOL_ID = "vault"; // unique per tool — "prompt", "vault", "analyzer"
+  const TOOL_DISPLAY_NAMES = {
+    prompt: "Prompt Builder",
+    vault: "Vault Organizer",
+    analyzer: "Image Analyzer"
+  };
+  document.getElementById("notifScopeNote").textContent =
+    `You're viewing notifications for the ${TOOL_DISPLAY_NAMES[TOOL_ID] || TOOL_ID} tool`;
   const Notifications = {
     _key: "notifications_" + TOOL_ID,
     _max: 30,
@@ -720,7 +736,7 @@
 
   // ---------------- Google Drive config ----------------
   const CLIENT_ID = "61220014333-mc5ifndc0je8f4bnefebncg9g5v5bug3.apps.googleusercontent.com";
-  const SCOPES = "https://www.googleapis.com/auth/drive.file";
+  const SCOPES = "https://www.googleapis.com/auth/drive.file email profile";
   const DRIVE_API = "https://www.googleapis.com/drive/v3";
   const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
   const ROOT_FOLDER_NAME = "Image Vault and Organizer";
@@ -777,6 +793,11 @@
           return;
         }
         accessToken = resp.access_token;
+        try{
+          const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {headers:authHeaders()});
+          const info = await infoRes.json();
+          googleEmail = info.email || null;
+        }catch(e){ googleEmail = null; }
         document.getElementById("signInGate").style.display = "none";
         document.getElementById("appRootWrap").style.display = "block";
         await bootAfterAuth();
