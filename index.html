@@ -897,14 +897,18 @@
       if(showColor) tile.style.borderTop=`4px solid ${cat.color}`;
       tile.innerHTML=`
         ${isUnsorted(cat)?"":`<div class="folder-tools"><button class="folder-gear" title="Folder options">⚙</button><button class="folder-del-x" title="Delete folder">✕</button></div>${openColorPopoverFor===cat.path?colorPopoverHTML():""}`}
-        <div class="tile-name">${cat.name}${hasSubcats?` <span style="font-size:0.7rem;color:var(--muted);font-weight:500;">(${subCats.length} sub)</span>`:""}</div>
-        <div class="tile-count">${count}</div>`;
+        <div class="tile-name">${cat.name}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
+          <div class="tile-count">${count}</div>
+          ${hasSubcats?`<div class="tile-count" style="background:color-mix(in srgb,var(--accent) 15%,var(--paper));color:var(--accent-deep);">${subCats.length} folder${subCats.length!==1?"s":""}</div>`:""}
+        </div>`;
       tile.onclick=e=>{
         if(e.target.classList.contains("rename-opt")){ e.stopPropagation(); openColorPopoverFor=null; openRenameModal(cat.path); return; }
         if(e.target.classList.contains("swatch")){ e.stopPropagation(); setCategoryColor(cat.path,e.target.dataset.color); return; }
         if(e.target.classList.contains("folder-gear")){ e.stopPropagation(); toggleColorPopover(cat.path); return; }
         if(e.target.classList.contains("folder-del-x")){ e.stopPropagation(); confirmDeleteCategory(cat.path); return; }
         if(e.target.closest(".color-popover")){ e.stopPropagation(); return; }
+        if(isUnsorted(cat)){ cameFromThemePath=null; enterFolder(cat.path); return; }
         enterThemeView(cat.path);
       };
       grid.appendChild(tile);
@@ -995,7 +999,8 @@
         if(ev.target.classList.contains("folder-gear")){ ev.stopPropagation(); toggleColorPopover(cat.path); return; }
         if(ev.target.classList.contains("folder-del-x")){ ev.stopPropagation(); confirmDeleteCategory(cat.path); return; }
         if(ev.target.closest(".color-popover")){ ev.stopPropagation(); return; }
-        cameFromThemePath=null; currentCategory=cat.path; document.getElementById("searchInput").value=""; renderFolders(); renderGallery();
+        if(isUnsorted(cat)){ cameFromThemePath=null; currentCategory=cat.path; document.getElementById("searchInput").value=""; renderFolders(); renderGallery(); return; }
+        enterThemeView(cat.path);
       };
       list.appendChild(row);
       // Sub-folders
